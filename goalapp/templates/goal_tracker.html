@@ -1,0 +1,630 @@
+{% extends 'header_footer.html' %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goal Tracker</title>
+    <style>
+    :root {
+        --coffee-dark: #4b3832;
+        --coffee-medium: #7e5c3d;
+        --coffee-light: #c9a98d;
+        --coffee-cream: #f3e9dc;
+        --coffee-accent: #a47148;
+        --coffee-hover: #6e4a2e;
+
+        --success-bg: #e7f5ea;
+        --success-text: #2e7d32;
+        --error-bg: #fff0f0;
+        --error-text: #b71c1c;
+
+        --border-color: #3e2c23;
+        --card-bg: #fcf8f3;
+        --spacing-sm: 12px;
+        --spacing-md: 20px;
+        --spacing-lg: 32px;
+        --border-radius: 8px;
+        --font-size-base: 16px;
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: 'Georgia', 'Times New Roman', serif;
+        line-height: 1.6;
+        background: var(--coffee-cream);
+        color: var(--coffee-dark);
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh; /* Ensure body takes full viewport height */
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        width: 100%; /* Ensure container matches header/footer width */
+        padding: var(--spacing-lg);
+        flex: 1 0 auto; /* Allow content to grow but not shrink below content height */
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: var(--spacing-lg);
+        font-size: 2rem;
+        color: var(--coffee-dark);
+    }
+
+    .home-btn {
+        display: inline-block;
+        padding: var(--spacing-sm) var(--spacing-md);
+        background: var(--coffee-medium);
+        color: white;
+        text-decoration: none;
+        border-radius: var(--border-radius);
+        transition: background 0.3s;
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .home-btn:hover, .home-btn:focus {
+        background: var(--coffee-hover);
+        outline: none;
+    }
+
+    .year-nav {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .year-nav button {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: var(--font-size-base);
+        background: var(--coffee-medium);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    .year-nav button:hover, .year-nav button:focus {
+        background: var(--coffee-hover);
+        outline: none;
+    }
+
+    .year-nav span {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--coffee-dark);
+    }
+
+    .goals-container {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+
+    .goal-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        box-shadow: 0 2px 5px rgba(75, 56, 50, 0.1);
+        overflow: hidden;
+    }
+
+    .goal-header {
+        padding: var(--spacing-md);
+        background: var(--coffee-cream);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background 0.3s;
+    }
+
+    .goal-header:hover {
+        background: #eadcd2;
+    }
+
+    .goal-header h2 {
+        font-size: 1.25rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .days-spent {
+        font-size: 0.9rem;
+        color: #6f4e37;
+        font-style: italic;
+    }
+
+    .goal-content {
+        padding: var(--spacing-md);
+        display: none;
+    }
+
+    .goal-content.active {
+        display: block;
+    }
+
+    .goal-table, .milestones-table {
+        margin-bottom: var(--spacing-md);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fffaf5;
+    }
+
+    th, td {
+        padding: var(--spacing-sm);
+        text-align: left;
+        border-bottom: 1px solid #d8c4b1;
+    }
+
+    th {
+        background: #ede0d4;
+        font-weight: bold;
+        font-size: 0.9rem;
+        color: #5b3a29;
+    }
+
+    td {
+        font-size: 0.9rem;
+        color: #3b2a23;
+    }
+
+    input[type="text"], input[type="date"] {
+        width: 100%;
+        padding: var(--spacing-sm);
+        border: 1px solid #bfa294;
+        border-radius: var(--border-radius);
+        font-size: 0.9rem;
+        background: #fdf8f4;
+    }
+
+    input[type="checkbox"] {
+        margin: 0 var(--spacing-sm);
+    }
+
+    .delete-btn {
+        background: none;
+        border: none;
+        color: var(--error-text);
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+
+    .delete-btn:hover, .delete-btn:focus {
+        color: #c62828;
+        outline: none;
+    }
+
+    .alert {
+        padding: var(--spacing-sm);
+        margin-bottom: var(--spacing-md);
+        border-radius: var(--border-radius);
+        font-size: 0.9rem;
+    }
+
+    .alert-error {
+        background: var(--error-bg);
+        color: var(--error-text);
+    }
+
+    .alert-success {
+        background: var(--success-bg);
+        color: var(--success-text);
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: var(--spacing-md);
+    }
+
+    button[type="submit"], button[type="button"] {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.9rem;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    button[type="submit"] {
+        background: var(--coffee-medium);
+        color: white;
+    }
+
+    button[type="submit"]:hover, button[type="submit"]:focus {
+        background: var(--coffee-hover);
+        outline: none;
+    }
+
+    .add-milestone-btn, #add-goal-btn {
+        background: #6b4226;
+        color: white;
+    }
+
+    .add-milestone-btn:hover, .add-milestone-btn:focus,
+    #add-goal-btn:hover, #add-goal-btn:focus {
+        background: #56331f;
+        outline: none;
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+    }
+
+    @media (max-width: 600px) {
+        .container {
+            padding: var(--spacing-md);
+        }
+
+        .goal-header h2 {
+            font-size: 1.1rem;
+        }
+
+        .goal-table, .milestones-table {
+            overflow-x: auto;
+        }
+
+        table {
+            min-width: 500px;
+        }
+
+        th, td {
+            padding: var(--spacing-sm) 5px;
+            font-size: 0.85rem;
+        }
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Goal Tracker</h1>
+        <a href="{% url 'user_home' %}" class="home-btn">Back to Home</a>
+        <div class="year-nav">
+            <button type="button" onclick="changeYear(-1)" aria-label="Previous Year">←</button>
+            <span id="current-year">{{ current_year }}</span>
+            <button type="button" onclick="changeYear(1)" aria-label="Next Year">→</button>
+        </div>
+        <form method="POST" aria-label="Goal Tracker Form">
+            {% csrf_token %}
+            <div class="goals-container" id="goals-container">
+                {% for item in goals_with_flags %}
+                {% with goal=item.goal milestones=item.milestones %}
+                <section class="goal-card" id="goal_{{ goal.id }}">
+                    <div class="goal-header">
+                        <h2 id="goal-title-{{ goal.id }}">Goal {{ forloop.counter }}: {{ goal.title }}
+                            {% if goal.completed and goal.start_date and goal.completed_date %}
+                                <span class="days-spent">number of days taken to complete: {{ goal.days_spent }}</span>
+                            {% endif %}
+                        </h2>
+                        <button type="submit" name="delete_goal" value="{{ goal.id }}" class="delete-btn">🗑</button>
+                    </div>
+
+                    <div class="goal-content">
+                        <table class="goal-table">
+                            <thead>
+                                <tr><th>Title</th><th>Start</th><th>Deadline</th><th>Completed</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="text" name="goal_title_{{ goal.id }}" value="{{ goal.title }}" required></td>
+                                    <td><input type="date" name="goal_start_{{ goal.id }}" value="{{ goal.start_date|date:'Y-m-d' }}"></td>
+                                    <td><input type="date" name="goal_deadline_{{ goal.id }}" value="{{ goal.deadline|date:'Y-m-d' }}"></td>
+                                    <td>
+                                        <input type="checkbox" name="goal_completed_{{ goal.id }}" {% if goal.completed %}checked{% endif %}>
+                                        <input type="hidden" name="goal_days_spent_{{ goal.id }}" value="{{ goal.days_spent|default_if_none:'' }}">
+                                        <input type="hidden" name="goal_completed_date_{{ goal.id }}" value="{{ goal.completed_date|date:'Y-m-d'|default_if_none:'' }}">
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <table class="milestones-table">
+                            <thead>
+                                <tr><th>Milestone</th><th>Progress</th><th>Deadline</th><th>Completed</th><th>Delete</th></tr>
+                            </thead>
+                            <tbody id="milestone-body-{{ goal.id }}">
+                                {% if milestones %}
+                                    {% for ms in milestones %}
+                                    <tr>
+                                        <td>
+                                            <input type="text" name="milestone_name_{{ goal.id }}_{{ forloop.counter0 }}" value="{{ ms.obj.name }}">
+                                        </td>
+                                        <td>
+                                            <input type="text" name="milestone_progress_{{ goal.id }}_{{ forloop.counter0 }}" value="{{ ms.obj.progress }}">
+                                        </td>
+                                        <td>
+                                            <input type="date" name="milestone_date_{{ goal.id }}_{{ forloop.counter0 }}" value="{{ ms.obj.deadline|date:'Y-m-d' }}">
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" name="milestone_completed_{{ goal.id }}_{{ forloop.counter0 }}"
+                                                   {% if ms.obj.completed %}checked{% endif %}
+                                                   {% if not ms.can_complete %}disabled{% endif %}>
+                                            <input type="hidden" name="milestone_completed_date_{{ goal.id }}_{{ forloop.counter0 }}"
+                                                   value="{{ ms.obj.completed_date|date:'Y-m-d'|default_if_none:'' }}">
+                                        </td>
+                                        <td>
+                                            <button type="submit" name="delete_milestone" value="{{ ms.obj.id }}">🗑</button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td><input type="text" name="milestone_name_{{ goal.id }}_0" placeholder="Milestone name"></td>
+                                        <td><input type="text" name="milestone_progress_{{ goal.id }}_0" placeholder="Progress"></td>
+                                        <td><input type="date" name="milestone_date_{{ goal.id }}_0"></td>
+                                        <td>
+                                            <input type="checkbox" name="milestone_completed_{{ goal.id }}_0">
+                                            <input type="hidden" name="milestone_completed_date_{{ goal.id }}_0">
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+
+                        <!-- ✅ Add Milestone Button + hidden counter -->
+                        <input type="hidden" name="new_milestone_count_{{ goal.id }}" id="new_milestone_count_{{ goal.id }}" value="0">
+                        <button type="button" class="add-milestone-btn" data-goal-id="{{ goal.id }}"
+                                onclick="addMilestone({{ goal.id }})">+ Add Milestone</button>
+                    </div>
+                </section>
+                {% endwith %}
+                {% endfor %}
+            </div>
+
+            <div class="action-buttons">
+                <button type="button" id="add-goal-btn">+ Add Goal</button>
+                <button type="submit">Save All</button>
+            </div>
+        </form>
+    </div>
+    <script>
+        // Use the actual current date (July 04, 2025, 04:39 PM IST)
+        const currentDate = new Date('2025-07-04T16:39:00+05:30');
+
+        const toggleGoalContent = (header) => {
+            const content = header.nextElementSibling;
+            const isExpanded = content.classList.contains('active');
+            document.querySelectorAll('.goal-content.active').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.goal-header[aria-expanded="true"]').forEach(h => h.setAttribute('aria-expanded', 'false'));
+            if (!isExpanded) {
+                content.classList.add('active');
+                header.setAttribute('aria-expanded', 'true');
+            }
+        };
+
+        const formatDate = (date) => {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        };
+
+        const updateDaysSpent = (goalId, isChecked) => {
+            const goalCard = document.getElementById(`goal_${goalId}`);
+            const startDateInput = goalCard.querySelector(`input[name="goal_start_${goalId}"]`);
+            const daysSpentInput = goalCard.querySelector(`input[name="goal_days_spent_${goalId}"]`);
+            const completedDateInput = goalCard.querySelector(`input[name="goal_completed_date_${goalId}"]`);
+            const headerTitle = goalCard.querySelector(`#goal-title-${goalId}`);
+            let daysSpan = headerTitle.querySelector('.days-spent');
+
+            if (isChecked) {
+                const startDate = new Date(startDateInput.value);
+                const tickingDate = currentDate;
+                if (!isNaN(startDate.getTime())) {
+                    const timeDiff = tickingDate - startDate;
+                    const daysSpent = Math.max(1, Math.floor(timeDiff / (1000 * 60 * 60 * 24)));
+                    const formattedDate = formatDate(tickingDate);
+                    if (!daysSpan) {
+                        daysSpan = document.createElement('span');
+                        daysSpan.className = 'days-spent';
+                        headerTitle.appendChild(daysSpan);
+                    }
+                    daysSpan.textContent = `number of days taken to complete: ${daysSpent}, completed date: ${formattedDate}`;
+                    if (daysSpentInput) daysSpentInput.value = daysSpent;
+                    if (completedDateInput) completedDateInput.value = tickingDate.toISOString().split('T')[0];
+                }
+            } else {
+                if (daysSpan) daysSpan.remove();
+                if (daysSpentInput) daysSpentInput.value = '';
+                if (completedDateInput) completedDateInput.value = '';
+            }
+        };
+
+        const createGoalCard = () => {
+            const goalsContainer = document.getElementById('goals-container');
+            const goalCount = document.querySelectorAll('.goal-card').length;
+            const newGoalId = `new_${Date.now()}`;
+
+            const goalCard = document.createElement('section');
+            goalCard.className = 'goal-card';
+            goalCard.id = `goal_${newGoalId}`;
+            goalCard.setAttribute('aria-labelledby', `goal-title-${newGoalId}`);
+            goalCard.innerHTML = `
+                <div class="goal-header" tabindex="0" role="button" aria-expanded="true">
+                    <h2 id="goal-title-${newGoalId}">
+                        New Goal
+                    </h2>
+                    <button type="button" class="delete-btn" aria-label="Delete Goal">🗑</button>
+                </div>
+                <div class="goal-content active">
+                    <div class="goal-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Goal</th>
+                                    <th scope="col">Start</th>
+                                    <th scope="col">Deadline</th>
+                                    <th scope="col">Completed</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <input type="text" name="goal_title_${newGoalId}" placeholder="Goal" required aria-label="Goal Title">
+                                    </td>
+                                    <td>
+                                        <input type="date" name="goal_start_${newGoalId}" value="${new Date().toISOString().split('T')[0]}" aria-label="Goal Start Date">
+                                    </td>
+                                    <td>
+                                        <input type="date" name="goal_deadline_${newGoalId}" aria-label="Goal Deadline">
+                                    </td>
+                                    <td>
+                                        <label>
+                                            <span class="sr-only">Completed</span>
+                                            <input type="checkbox" name="goal_completed_${newGoalId}" data-goal-id="${newGoalId}">
+                                        </label>
+                                        <input type="hidden" name="goal_days_spent_${newGoalId}" id="goal_days_spent_${newGoalId}" value="">
+                                        <input type="hidden" name="goal_completed_date_${newGoalId}" id="goal_completed_date_${newGoalId}" value="">
+                                    </td>
+                                    <td>
+                                        <button type="button" class="delete-btn" aria-label="Delete Goal">🗑</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="milestones-table" id="milestones_${newGoalId}">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Milestone</th>
+                                    <th scope="col">Progress</th>
+                                    <th scope="col">Deadline</th>
+                                    <th scope="col">Completed</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <input type="hidden" name="new_milestone_count_${newGoalId}" value="0">
+                    <button type="button" class="add-milestone-btn" data-goal-id="${newGoalId}">+ Add Milestone</button>
+                </div>
+            `;
+
+            goalCard.querySelector('.goal-header').addEventListener('click', () => toggleGoalContent(goalCard.querySelector('.goal-header')));
+            goalCard.querySelector('.goal-header').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleGoalContent(goalCard.querySelector('.goal-header'));
+                }
+            });
+            goalCard.querySelector('.delete-btn').addEventListener('click', () => goalCard.remove());
+            goalCard.querySelector(`input[name="goal_completed_${newGoalId}"]`).addEventListener('change', (e) => {
+                updateDaysSpent(newGoalId, e.target.checked);
+            });
+            goalsContainer.appendChild(goalCard);
+        };
+
+        const createMilestone = (goalId, milestonesContainer, countInput) => {
+            let count = parseInt(countInput.value) || 0;
+            const milestoneRow = document.createElement('tr');
+            milestoneRow.setAttribute('aria-labelledby', `milestone-name-${goalId}-new${count}`);
+            milestoneRow.innerHTML = `
+                <td>
+                    <input type="text" name="milestone_name_${goalId}new${count}" placeholder="Milestone" required aria-label="Milestone Name">
+                </td>
+                <td>
+                    <input type="text" name="milestone_progress_${goalId}new${count}" placeholder="Progress" aria-label="Milestone Progress">
+                </td>
+                <td>
+                    <input type="date" name="milestone_date_${goalId}new${count}" aria-label="Milestone Deadline">
+                </td>
+                <td>
+                    <label>
+                        <span class="sr-only">Completed</span>
+                        <input type="checkbox" name="milestone_completed_${goalId}new${count}">
+                    </label>
+                </td>
+                <td>
+                    <button type="button" class="delete-btn" aria-label="Delete Milestone">🗑</button>
+                </td>
+            `;
+
+            milestoneRow.querySelector('.delete-btn').addEventListener('click', () => milestoneRow.remove());
+            milestonesContainer.querySelector('tbody').appendChild(milestoneRow);
+            countInput.value = count + 1;
+        };
+
+        const changeYear = (offset) => {
+            const yearElement = document.getElementById('current-year');
+            const currentYear = parseInt(yearElement.textContent);
+            yearElement.textContent = currentYear + offset;
+            window.location.href = `?year=${currentYear + offset}`;
+        };
+
+        const addMilestone = (goalId) => {
+            const tbody = document.getElementById(`milestone-body-${goalId}`);
+            const countInput = document.getElementById(`new_milestone_count_${goalId}`);
+            const index = parseInt(countInput.value || "0");
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td><input type="text" name="milestone_name_${goalId}new${index}" placeholder="Milestone name"></td>
+                <td><input type="text" name="milestone_progress_${goalId}new${index}" placeholder="Progress"></td>
+                <td><input type="date" name="milestone_date_${goalId}new${index}"></td>
+                <td>
+                    <input type="checkbox" name="milestone_completed_${goalId}new${index}">
+                    <input type="hidden" name="milestone_completed_date_${goalId}new${index}">
+                </td>
+                <td></td>
+            `;
+            tbody.appendChild(row);
+            countInput.value = index + 1;
+        };
+
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'add-goal-btn') {
+                createGoalCard();
+            } else if (e.target.classList.contains('add-milestone-btn')) {
+                const goalId = e.target.dataset.goalId;
+                const milestonesContainer = document.getElementById(`milestones_${goalId}`);
+                const countInput = document.querySelector(`input[name="new_milestone_count_${goalId}"]`);
+                createMilestone(goalId, milestonesContainer, countInput);
+            } else if (e.target.closest('.goal-header')) {
+                toggleGoalContent(e.target.closest('.goal-header'));
+            }
+        });
+
+        document.addEventListener('change', (e) => {
+            if (e.target.matches('input[type="checkbox"][name^="goal_completed_"]')) {
+                const goalId = e.target.dataset.goalId || e.target.name.split('_')[2];
+                updateDaysSpent(goalId, e.target.checked);
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('.goal-header')) {
+                e.preventDefault();
+                toggleGoalContent(e.target.closest('.goal-header'));
+            }
+        });
+    </script>
+</body>
+</html>
+{% endblock %}

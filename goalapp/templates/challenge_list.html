@@ -1,0 +1,701 @@
+{% extends 'header_footer.html' %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenge Board</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4eee8;
+            color: #3e2723;
+            font-family: 'Georgia', serif;
+        }
+        .navbar {
+            background-color: #4B2E2B !important;
+        }
+        .navbar-nav .nav-link,
+        .navbar .dropdown-item {
+            color: #FAF3E0 !important;
+        }
+        .navbar .dropdown-menu {
+            background-color: #4B2E2B;
+        }
+        .navbar .dropdown-item:hover {
+            background-color: #2E1A17;
+            color: #C19A6B !important;
+        }
+        .challenge-card {
+            margin-bottom: 20px;
+            background-color: #fff8f0;
+            border: 1px solid #d7ccc8;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(64, 44, 33, 0.1);
+        }
+        .error {
+            color: #c62828;
+        }
+        #challenge-form {
+            display: none;
+        }
+        .non-creator-message {
+            font-style: italic;
+            color: #8d6e63;
+        }
+        .joined-users,
+        .progress-updates {
+            margin-top: 15px;
+        }
+        .progress-updates {
+            display: none;
+        }
+        .progress-updates.show {
+            display: block;
+        }
+        .update-card {
+            border: 1px solid #d7ccc8;
+            background-color: #fefaf7;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+        }
+        .media-preview {
+            max-width: 200px;
+            margin-top: 5px;
+            border-radius: 4px;
+            border: 1px solid #c7b299;
+        }
+        .update-form {
+            margin-bottom: 20px;
+            display: none;
+        }
+        .update-form.show {
+            display: block;
+        }
+        .toggle-update-form, .toggle-progress-updates {
+            font-size: 0.9rem;
+            padding: 0.3rem 0.6rem;
+        }
+        .comments-section {
+            margin-top: 10px;
+            display: none;
+        }
+        .comments-section.show {
+            display: block;
+        }
+        .comment {
+            margin-left: 20px;
+            margin-top: 5px;
+            position: relative;
+            cursor: pointer;
+            background-color: #f8f1ea;
+            padding: 6px 10px;
+            border-radius: 5px;
+        }
+        .comment.level-1 { margin-left: 20px; }
+        .comment.level-2 { margin-left: 40px; }
+        .comment.level-3 { margin-left: 60px; }
+        .comment.level-4 { margin-left: 80px; }
+        .comment.level-5 { margin-left: 100px; }
+        .comment:hover {
+            background-color: #e0d6cf;
+        }
+        .comment .mention {
+            font-weight: bold;
+            color: #5d4037;
+        }
+        .comment-actions {
+            display: none;
+            position: absolute;
+            right: 10px;
+            top: 5px;
+            background-color: #fffaf5;
+            border: 1px solid #c7b299;
+            border-radius: 5px;
+            padding: 5px;
+            z-index: 1000;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        }
+        .comment:hover .comment-actions {
+            display: block;
+        }
+        .action-icon {
+            margin-left: 5px;
+            cursor: pointer;
+            color: #5d4037;
+        }
+        .replies {
+            display: none;
+        }
+        .replies.show {
+            display: block;
+        }
+        .toggle-replies, .toggle-comments, .toggle-reply-form, .toggle-update-form, .toggle-progress-updates {
+            cursor: pointer;
+            color: #5d4037;
+            text-decoration: underline;
+        }
+        .toggle-replies:hover, .toggle-comments:hover, .toggle-reply-form:hover, .toggle-update-form:hover, .toggle-progress-updates:hover {
+            color: #3e2723;
+        }
+        .reply-form {
+            display: none;
+        }
+        .reply-form.level-1 { margin-left: 40px; }
+        .reply-form.level-2 { margin-left: 60px; }
+        .reply-form.level-3 { margin-left: 80px; }
+        .reply-form.level-4 { margin-left: 100px; }
+        .reply-form.level-5 { margin-left: 120px; }
+        .reply-form.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="mb-3">
+            <a href="{% url 'user_home' %}" class="btn btn-outline-secondary">← Back to Home</a>
+            <a href="{% url 'leaderboard' %}" class="btn btn-outline-primary ms-2">View Leaderboard</a>
+        </div>
+        <h1 class="mb-4 text-center">Challenge Board</h1>
+        {% if messages %}
+            <div class="alert alert-dismissible fade show" role="alert">
+                {% for message in messages %}
+                    <div class="alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}info{% endif %}">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        <h3>Create New Challenge</h3>
+        <button id="add-challenge-btn" class="btn btn-primary mb-3">+ Add Challenge</button>
+        <form method="post" class="mb-5" id="challenge-form">
+            {% csrf_token %}
+            <input type="hidden" name="create_challenge" value="1">
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" id="cancel-challenge-btn" class="btn btn-secondary">Cancel</button>
+        </form>
+        <h3>All Challenges</h3>
+        {% load challenge_tags %}
+        {% if challenge_data %}
+            {% for data in challenge_data %}
+                {% with challenge=data.challenge has_liked_data=data.has_liked_data comment_liked_data=data.comment_liked_data %}
+                    <div class="card challenge-card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ challenge.title }}</h5>
+                            <p class="card-text">{{ challenge.description }}</p>
+                            <p class="card-text"><small class="text-muted">
+                                Created by {{ challenge.user.username }} on {{ challenge.created_at|date:"F d, Y" }}<br>
+                                Start: {{ challenge.start_date|date:"F d, Y" }} | End: {{ challenge.end_date|date:"F d, Y" }}
+                            </small></p>
+                            <div class="joined-users">
+                                <strong>Joined by:</strong>
+                                {% if challenge.progress.all %}
+                                    {% for progress in challenge.progress.all %}
+                                        {{ progress.user.username }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    No one has joined yet.
+                                {% endif %}
+                            </div>
+                            <div>
+                                <button class="btn btn-primary toggle-progress-updates mb-2" onclick="toggleProgressUpdates('progress-updates-{{ challenge.id }}')">Show Updates</button>
+                                <div class="progress-updates" id="progress-updates-{{ challenge.id }}">
+                                    <h6>Progress Updates</h6>
+                                    {% if challenge.has_joined %}
+                                        <button class="btn btn-primary toggle-update-form mb-2" onclick="toggleUpdateForm('update-form-{{ challenge.id }}')">Post an Update</button>
+                                        <form method="post" class="update-form" id="update-form-{{ challenge.id }}" enctype="multipart/form-data">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="post_update" value="1">
+                                            <input type="hidden" name="challenge_id" value="{{ challenge.id }}">
+                                            <h6>Post Your Update</h6>
+                                            <div>
+                                                <label for="update-date-{{ challenge.id }}" class="form-label">Update Date</label>
+                                                <input type="date" id="update-date-{{ challenge.id }}" name="update_date" class="form-control mb-2" value="{{ current_date|date:'Y-m-d' }}" min="{{ challenge.start_date|date:'Y-m-d' }}" max="{{ challenge.end_date|date:'Y-m-d' }}" required>
+                                            </div>
+                                            <textarea id="update-text-{{ challenge.id }}" name="text" class="form-control mb-2" placeholder="Share your progress..." rows="3"></textarea>
+                                            <div class="mb-2">
+                                                <button type="button" class="btn btn-info" onclick="startCamera('{{ challenge.id }}')">Start Camera</button>
+                                                <button type="button" class="btn btn-primary" onclick="capturePhoto('{{ challenge.id }}')">Capture Photo</button>
+                                                <button type="button" class="btn btn-primary" onclick="startRecording('{{ challenge.id }}')">Start Recording</button>
+                                                <button type="button" class="btn btn-danger" onclick="stopRecording('{{ challenge.id }}')">Stop Recording</button>
+                                            </div>
+                                            <video id="video-{{ challenge.id }}" autoplay class="media-preview mb-2"></video>
+                                            <canvas id="canvas-{{ challenge.id }}" style="display: none;"></canvas>
+                                            <img id="photo-preview-{{ challenge.id }}" class="media-preview" style="display: none;">
+                                            <video id="video-preview-{{ challenge.id }}" class="media-preview" controls style="display: none;"></video>
+                                            <div class="mb-2">
+                                                <label for="photo-upload-{{ challenge.id }}" class="form-label">Upload Photo</label>
+                                                <input type="file" id="photo-upload-{{ challenge.id }}" name="photo" class="form-control mb-2" accept="image/*">
+                                                <label for="video-upload-{{ challenge.id }}" class="form-label">Upload Video</label>
+                                                <input type="file" id="video-upload-{{ challenge.id }}" name="video" class="form-control mb-2" accept="video/mp4">
+                                            </div>
+                                            <button type="submit" class="btn btn-success">Post Update</button>
+                                            <button type="button" class="btn btn-secondary" onclick="toggleUpdateForm('update-form-{{ challenge.id }}')">Cancel</button>
+                                        </form>
+                                    {% endif %}
+                                    {% for progress in challenge.progress.all %}
+                                        {% for update in progress.updates.all|dictsortreversed:"created_at" %}
+                                            <div class="update-card">
+                                                <p><strong>{{ update.challenge_progress.user.username }}</strong> on {{ update.created_at|date:"F d, Y H:i" }} (Day: {{ update.update_date|date:"F d, Y" }})</p>
+                                                <p>{{ update.text }}</p>
+                                                {% if update.photo %}
+                                                    <img src="{{ update.photo.url }}" class="media-preview" alt="Update Photo">
+                                                {% endif %}
+                                                {% if update.video %}
+                                                    <video src="{{ update.video.url }}" class="media-preview" controls></video>
+                                                {% endif %}
+                                                <div class="mt-2">
+                                                    <form method="post" class="d-inline">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="{% if has_liked_data|get_item:progress.id|get_item:update.id %}unlike_update{% else %}like_update{% endif %}" value="1">
+                                                        <input type="hidden" name="update_id" value="{{ update.id }}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                            {% if has_liked_data|get_item:progress.id|get_item:update.id %}Unlike{% else %}Like{% endif %} ({{ update.likes.count }})
+                                                        </button>
+                                                    </form>
+                                                    {% if update.challenge_progress.user != user %}
+                                                        <form method="post" class="d-inline">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="report_post" value="1">
+                                                            <input type="hidden" name="update_id" value="{{ update.id }}">
+                                                            <button type="submit" class="btn btn-sm btn-outline-warning ms-2">Report</button>
+                                                        </form>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="toggle-comments mt-2" onclick="toggleComments('comments-{{ update.id }}')">
+                                                    Show {{ update.comments.count }} comments
+                                                </div>
+                                                <div class="comments-section" id="comments-{{ update.id }}">
+                                                    {% for comment in update.comments.all %}
+                                                        {% if not comment.get_ancestors %}
+                                                            <div class="comment level-1" data-comment-id="{{ comment.id }}">
+                                                                <strong>{{ comment.user.username }}</strong> on {{ comment.created_at|date:"F d, Y H:i" }}: 
+                                                                <span class="comment-text">{{ comment.text|safe }}</span>
+                                                                <div class="comment-actions">
+                                                                    {% if comment.user == user %}
+                                                                        <i class="bi bi-pencil action-icon text-primary" data-bs-toggle="modal" data-bs-target="#editCommentModal-{{ comment.id }}" title="Edit Comment"></i>
+                                                                        <i class="bi bi-trash action-icon text-danger" data-bs-toggle="modal" data-bs-target="#deleteCommentModal-{{ comment.id }}" title="Delete Comment"></i>
+                                                                    {% else %}
+                                                                        <i class="bi bi-flag action-icon text-warning" data-bs-toggle="modal" data-bs-target="#reportCommentModal-{{ comment.id }}" title="Report Comment"></i>
+                                                                    {% endif %}
+                                                                </div>
+                                                                <div class="mt-1">
+                                                                    <form method="post" class="d-inline">
+                                                                        {% csrf_token %}
+                                                                        <input type="hidden" name="{% if comment_liked_data|get_item:progress.id|get_item:comment.id %}unlike_comment{% else %}like_comment{% endif %}" value="1">
+                                                                        <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                                                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                                            {% if comment_liked_data|get_item:progress.id|get_item:comment.id %}Unlike{% else %}Like{% endif %} ({{ comment.likes.count }})
+                                                                        </button>
+                                                                    </form>
+                                                                </div>
+                                                                <div class="toggle-reply-form mt-1" onclick="toggleReplyForm('reply-form-{{ comment.id }}', '{{ comment.user.username }}')" data-username="{{ comment.user.username }}">
+                                                                    Reply
+                                                                </div>
+                                                                <form method="post" class="reply-form level-1 mt-2" id="reply-form-{{ comment.id }}">
+                                                                    {% csrf_token %}
+                                                                    <input type="hidden" name="comment_update" value="1">
+                                                                    <input type="hidden" name="update_id" value="{{ update.id }}">
+                                                                    <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                                                                    <textarea id="reply-text-{{ comment.id }}" name="comment_text" class="form-control mb-2" placeholder="Reply to @{{ comment.user.username }}..." rows="2"></textarea>
+                                                                    <button type="submit" class="btn btn-sm btn-primary">Reply</button>
+                                                                </form>
+                                                                {% if comment.replies.all %}
+                                                                    <div class="toggle-replies mt-1" onclick="toggleReplies('replies-{{ comment.id }}')">
+                                                                        View {{ comment.get_descendant_count }} repl{{ comment.get_descendant_count|pluralize:"y,ies" }}
+                                                                    </div>
+                                                                    <div class="replies" id="replies-{{ comment.id }}">
+                                                                        {% for reply in comment.get_descendants %}
+                                                                            <div class="comment level-{{ reply.get_depth }}" data-comment-id="{{ reply.id }}">
+                                                                                <strong>{{ reply.user.username }}</strong> on {{ reply.created_at|date:"F d, Y H:i" }}: 
+                                                                                <span class="comment-text">{{ reply.text|safe }}</span>
+                                                                                <div class="comment-actions">
+                                                                                    {% if reply.user == user %}
+                                                                                        <i class="bi bi-pencil action-icon text-primary" data-bs-toggle="modal" data-bs-target="#editCommentModal-{{ reply.id }}" title="Edit Comment"></i>
+                                                                                        <i class="bi bi-trash action-icon text-danger" data-bs-toggle="modal" data-bs-target="#deleteCommentModal-{{ reply.id }}" title="Delete Comment"></i>
+                                                                                    {% else %}
+                                                                                        <i class="bi bi-flag action-icon text-warning" data-bs-toggle="modal" data-bs-target="#reportCommentModal-{{ reply.id }}" title="Report Comment"></i>
+                                                                                    {% endif %}
+                                                                                </div>
+                                                                                <div class="mt-1">
+                                                                                    <form method="post" class="d-inline">
+                                                                                        {% csrf_token %}
+                                                                                        <input type="hidden" name="{% if comment_liked_data|get_item:progress.id|get_item:reply.id %}unlike_comment{% else %}like_comment{% endif %}" value="1">
+                                                                                        <input type="hidden" name="comment_id" value="{{ reply.id }}">
+                                                                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                                                            {% if comment_liked_data|get_item:progress.id|get_item:reply.id %}Unlike{% else %}Like{% endif %} ({{ reply.likes.count }})
+                                                                                        </button>
+                                                                                    </form>
+                                                                                </div>
+                                                                                <div class="toggle-reply-form mt-1" onclick="toggleReplyForm('reply-form-{{ reply.id }}', '{{ reply.user.username }}')" data-username="{{ reply.user.username }}">
+                                                                                    Reply
+                                                                                </div>
+                                                                                <form method="post" class="reply-form level-{{ reply.get_depth|add:1 }} mt-2" id="reply-form-{{ reply.id }}">
+                                                                                    {% csrf_token %}
+                                                                                    <input type="hidden" name="comment_update" value="1">
+                                                                                    <input type="hidden" name="update_id" value="{{ update.id }}">
+                                                                                    <input type="hidden" name="comment_id" value="{{ reply.id }}">
+                                                                                    <textarea id="reply-text-{{ reply.id }}" name="comment_text" class="form-control mb-2" placeholder="Reply to @{{ reply.user.username }}..." rows="2"></textarea>
+                                                                                    <button type="submit" class="btn btn-sm btn-primary">Reply</button>
+                                                                                </form>
+                                                                                <div class="modal fade" id="editCommentModal-{{ reply.id }}" tabindex="-1" aria-labelledby="editCommentModalLabel-{{ reply.id }}" aria-hidden="true">
+                                                                                    <div class="modal-dialog">
+                                                                                        <div class="modal-content">
+                                                                                            <div class="modal-header">
+                                                                                                <h5 class="modal-title" id="editCommentModalLabel-{{ reply.id }}">Edit Comment</h5>
+                                                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                            </div>
+                                                                                            <div class="modal-body">
+                                                                                                <form method="post">
+                                                                                                    {% csrf_token %}
+                                                                                                    <input type="hidden" name="edit_comment" value="1">
+                                                                                                    <input type="hidden" name="comment_id" value="{{ reply.id }}">
+                                                                                                    <textarea name="comment_text" class="form-control" rows="3" required>{{ reply.text }}</textarea>
+                                                                                                    <button type="submit" class="btn btn-primary mt-2">Save Changes</button>
+                                                                                                </form>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="modal fade" id="deleteCommentModal-{{ reply.id }}" tabindex="-1" aria-labelledby="deleteCommentModalLabel-{{ reply.id }}" aria-hidden="true">
+                                                                                    <div class="modal-dialog">
+                                                                                        <div class="modal-content">
+                                                                                            <div class="modal-header">
+                                                                                                <h5 class="modal-title" id="deleteCommentModalLabel-{{ reply.id }}">Delete Comment</h5>
+                                                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                            </div>
+                                                                                            <div class="modal-body">
+                                                                                                Are you sure you want to delete this comment?
+                                                                                            </div>
+                                                                                            <div class="modal-footer">
+                                                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                                                <form method="post">
+                                                                                                    {% csrf_token %}
+                                                                                                    <input type="hidden" name="delete_comment" value="1">
+                                                                                                    <input type="hidden" name="comment_id" value="{{ reply.id }}">
+                                                                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                                                                </form>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="modal fade" id="reportCommentModal-{{ reply.id }}" tabindex="-1" aria-labelledby="reportCommentModalLabel-{{ reply.id }}" aria-hidden="true">
+                                                                                    <div class="modal-dialog">
+                                                                                        <div class="modal-content">
+                                                                                            <div class="modal-header">
+                                                                                                <h5 class="modal-title" id="reportCommentModalLabel-{{ reply.id }}">Report Comment</h5>
+                                                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                            </div>
+                                                                                            <div class="modal-body">
+                                                                                                Are you sure you want to report this comment?
+                                                                                            </div>
+                                                                                            <div class="modal-footer">
+                                                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                                                <form method="post">
+                                                                                                    {% csrf_token %}
+                                                                                                    <input type="hidden" name="report_comment" value="1">
+                                                                                                    <input type="hidden" name="comment_id" value="{{ reply.id }}">
+                                                                                                    <button type="submit" class="btn btn-warning">Report</button>
+                                                                                                </form>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        {% endfor %}
+                                                                    </div>
+                                                                {% endif %}
+                                                            </div>
+                                                            <div class="modal fade" id="editCommentModal-{{ comment.id }}" tabindex="-1" aria-labelledby="editCommentModalLabel-{{ comment.id }}" aria-hidden="true">
+                                                                <div class="modal-dialog">
+                                                                    <div class="modal-content">
+                                                                        <div class="modal-header">
+                                                                            <h5 class="modal-title" id="editCommentModalLabel-{{ comment.id }}">Edit Comment</h5>
+                                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                        </div>
+                                                                        <div class="modal-body">
+                                                                            <form method="post">
+                                                                                {% csrf_token %}
+                                                                                <input type="hidden" name="edit_comment" value="1">
+                                                                                <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                                                                                <textarea name="comment_text" class="form-control" rows="3" required>{{ comment.text }}</textarea>
+                                                                                <button type="submit" class="btn btn-primary mt-2">Save Changes</button>
+                                                                            </form>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal fade" id="deleteCommentModal-{{ comment.id }}" tabindex="-1" aria-labelledby="deleteCommentModalLabel-{{ comment.id }}" aria-hidden="true">
+                                                                <div class="modal-dialog">
+                                                                    <div class="modal-content">
+                                                                        <div class="modal-header">
+                                                                            <h5 class="modal-title" id="deleteCommentModalLabel-{{ comment.id }}">Delete Comment</h5>
+                                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                        </div>
+                                                                        <div class="modal-body">
+                                                                            Are you sure you want to delete this comment?
+                                                                        </div>
+                                                                        <div class="modal-footer">
+                                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                            <form method="post">
+                                                                                {% csrf_token %}
+                                                                                <input type="hidden" name="delete_comment" value="1">
+                                                                                <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                                                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                                                            </form>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal fade" id="reportCommentModal-{{ comment.id }}" tabindex="-1" aria-labelledby="reportCommentModalLabel-{{ comment.id }}" aria-hidden="true">
+                                                                <div class="modal-dialog">
+                                                                    <div class="modal-content">
+                                                                        <div class="modal-header">
+                                                                            <h5 class="modal-title" id="reportCommentModalLabel-{{ comment.id }}">Report Comment</h5>
+                                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                        </div>
+                                                                        <div class="modal-body">
+                                                                            Are you sure you want to report this comment?
+                                                                        </div>
+                                                                        <div class="modal-footer">
+                                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                            <form method="post">
+                                                                                {% csrf_token %}
+                                                                                <input type="hidden" name="report_comment" value="1">
+                                                                                <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                                                                                <button type="submit" class="btn btn-warning">Report</button>
+                                                                            </form>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        {% endif %}
+                                                    {% empty %}
+                                                        <p>No comments yet.</p>
+                                                    {% endfor %}
+                                                    <form method="post" class="mt-2">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="comment_update" value="1">
+                                                        <input type="hidden" name="update_id" value="{{ update.id }}">
+                                                        <textarea id="comment-text-{{ update.id }}" name="comment_text" class="form-control mb-2" placeholder="Add a comment..." rows="2"></textarea>
+                                                        <button type="submit" class="btn btn-sm btn-primary">Comment</button>
+                                                    </form>
+                                                </div>
+                                                {% if update.challenge_progress.user == user %}
+                                                    <form method="post" class="mt-2">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="delete_update" value="1">
+                                                        <input type="hidden" name="update_id" value="{{ update.id }}">
+                                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% if challenge.is_creator %}
+                                <form method="post" class="mt-2">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="delete_challenge" value="1">
+                                    <input type="hidden" name="challenge_id" value="{{ challenge.id }}">
+                                    <button type="submit" class="btn btn-danger">Delete Challenge</button>
+                                </form>
+                            {% else %}
+                                <p class="non-creator-message">You can only view or join this challenge, as you are not the creator.</p>
+                            {% endif %}
+                            {% if challenge.has_joined %}
+                                <form method="post" class="mt-2">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="unjoin_challenge" value="1">
+                                    <input type="hidden" name="challenge_id" value="{{ challenge.id }}">
+                                    <button type="submit" class="btn btn-secondary">Unjoin Challenge</button>
+                                </form>
+                            {% else %}
+                                {% if challenge.start_date <= current_date and challenge.end_date >= current_date %}
+                                    <form method="post" class="mt-2">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="join_challenge" value="1">
+                                        <input type="hidden" name="challenge_id" value="{{ challenge.id }}">
+                                        <button type="submit" class="btn btn-primary">Join Challenge</button>
+                                    </form>
+                                {% else %}
+                                    <p class="non-creator-message">This challenge is not currently open for joining.</p>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endwith %}
+            {% endfor %}
+        {% else %}
+            <p>No challenges available. Create one above!</p>
+        {% endif %}
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle challenge creation form
+        document.getElementById('add-challenge-btn').addEventListener('click', () => {
+            const form = document.getElementById('challenge-form');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        });
+        // Hide form on cancel
+        document.getElementById('cancel-challenge-btn').addEventListener('click', () => {
+            document.getElementById('challenge-form').style.display = 'none';
+        });
+        // Toggle Update Form
+        function toggleUpdateForm(formId) {
+            const updateForm = document.getElementById(formId);
+            const toggleButton = updateForm.previousElementSibling;
+            if (updateForm.classList.contains('show')) {
+                updateForm.classList.remove('show');
+                toggleButton.textContent = 'Post an Update';
+            } else {
+                updateForm.classList.add('show');
+                toggleButton.textContent = 'Hide Update Form';
+            }
+        }
+        // Toggle Progress Updates
+        function toggleProgressUpdates(sectionId) {
+            const progressSection = document.getElementById(sectionId);
+            const toggleButton = progressSection.previousElementSibling;
+            if (progressSection.classList.contains('show')) {
+                progressSection.classList.remove('show');
+                toggleButton.textContent = 'Show Updates';
+            } else {
+                progressSection.classList.add('show');
+                toggleButton.textContent = 'Hide Updates';
+            }
+        }
+        // Toggle Comments
+        function toggleComments(commentsId) {
+            const comments = document.getElementById(commentsId);
+            const toggleLink = comments.previousElementSibling;
+            const commentCount = comments.querySelectorAll('.comment.level-1').length;
+            if (comments.classList.contains('show')) {
+                comments.classList.remove('show');
+                toggleLink.textContent = `Show ${commentCount} comment${commentCount === 1 ? '' : 's'}`;
+            } else {
+                comments.classList.add('show');
+                toggleLink.textContent = `Hide comments`;
+            }
+        }
+        // Toggle Replies
+        function toggleReplies(repliesId) {
+            const replies = document.getElementById(repliesId);
+            const toggleLink = replies.previousElementSibling;
+            const replyCount = toggleLink.textContent.match(/\d+/)[0];
+            if (replies.classList.contains('show')) {
+                replies.classList.remove('show');
+                toggleLink.textContent = `View ${replyCount} repl${replyCount === 1 ? 'y' : 'ies'}`;
+            } else {
+                replies.classList.add('show');
+                toggleLink.textContent = `Hide replies`;
+            }
+        }
+        // Toggle Reply Form with Mention
+        function toggleReplyForm(formId, username) {
+            const replyForm = document.getElementById(formId);
+            const toggleLink = replyForm.previousElementSibling;
+            const textarea = document.getElementById(`reply-text-${formId.split('-').pop()}`);
+            if (replyForm.classList.contains('show')) {
+                replyForm.classList.remove('show');
+                toggleLink.textContent = `Reply`;
+                textarea.value = '';
+            } else {
+                replyForm.classList.add('show');
+                toggleLink.textContent = `Cancel reply`;
+                textarea.value = `@${username} `;
+                textarea.focus();
+            }
+        }
+        // Webcam Capture Logic
+        let stream = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        async function startCamera(challengeId) {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                const video = document.getElementById(`video-${challengeId}`);
+                video.srcObject = stream;
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+                alert("Could not access camera. Please check permissions.");
+            }
+        }
+        // Convert data URL to File object
+        function dataURLtoFile(dataurl, filename) {
+            let arr = dataurl.split(','),
+                mime = arr[0].match(/:(.*?);/)[1],
+                bstr = atob(arr[1]),
+                n = bstr.length,
+                u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new File([u8arr], filename, { type: mime });
+        }
+        function capturePhoto(challengeId) {
+            const video = document.getElementById(`video-${challengeId}`);
+            const canvas = document.getElementById(`canvas-${challengeId}`);
+            const photoPreview = document.getElementById(`photo-preview-${challengeId}`);
+            const photoInput = document.getElementById(`photo-upload-${challengeId}`);
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const dataURL = canvas.toDataURL('image/png');
+            photoPreview.src = dataURL;
+            photoPreview.style.display = 'block';
+
+            // Convert data URL to File and assign to file input
+            const file = dataURLtoFile(dataURL, `captured-photo-${challengeId}.png`);
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            photoInput.files = dataTransfer.files;
+
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+        }
+        function startRecording(challengeId) {
+            if (!stream) {
+                alert("Please start the camera first.");
+                return;
+            }
+            recordedChunks = [];
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = event => {
+                if (event.data.size > 0) {
+                    recordedChunks.push(event.data);
+                }
+            };
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+                const videoPreview = document.getElementById(`video-preview-${challengeId}`);
+                videoPreview.src = URL.createObjectURL(blob);
+                videoPreview.style.display = 'block';
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+            };
+            mediaRecorder.start();
+        }
+        function stopRecording(challengeId) {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+        }
+    </script>
+</body>
+{% endblock %}

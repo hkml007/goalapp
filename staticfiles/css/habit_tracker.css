@@ -1,0 +1,38 @@
+body {
+    background-color: #fef9f8;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    color: #2b2b2b;
+    padding: 20px;
+}
+
+.title {
+    text-align: center;
+    font-size: 36px;
+    letter-spacing: 10px;
+}
+
+.month-buttons button {
+    margin: 5px;
+    background-color: #f7d6e0;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.tracker-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.tracker-table th, .tracker-table td {
+    border: 1px solid #ccc;
+    text-align: center;
+    padding: 8px;
+}
+
+.tracker-table th {
+    background-color: #fcd8e5;
+}

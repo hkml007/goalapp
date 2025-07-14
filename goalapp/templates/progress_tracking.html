@@ -1,0 +1,185 @@
+{% extends 'header_footer.html' %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Tracking</title>
+    {% load static %}
+    <style>
+
+        .container-mt {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fffaf5;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(90, 66, 50, 0.1);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #4b2e2e;
+        }
+        .nav-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #a9746e;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .nav-btn:hover {
+            background: #865d57;
+        }
+        .year-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .year-nav button {
+            padding: 10px 20px;
+            background: #c1a18a;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .year-nav button:hover {
+            background: #a2836f;
+        }
+        .dashboard {
+            background: #fff8f2;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #d3b6a3;
+        }
+        .analytics-summary p {
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .chart-container {
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        .goal-card {
+            background: #fff8f2;
+            padding: 15px;
+            border: 1px solid #d3b6a3;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .goal-card h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        progress {
+            width: 100%;
+            height: 20px;
+            background: #eee3d9;
+            border-radius: 6px;
+        }
+        progress::-webkit-progress-value {
+            background: #a9746e;
+        }
+        progress::-moz-progress-bar {
+            background: #a9746e;
+        }
+        .alert {
+            padding: 10px;
+            margin-bottom: 20px;
+            background: #fdecea;
+            color: #7a2323;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-mt">
+        <h1>Progress Tracking</h1>
+        <a href="{% url 'goal_tracker' %}" class="nav-btn">Go to Goal Tracker</a>
+
+        <div class="year-nav">
+            <button type="button" onclick="changeYear(-1)">← Previous</button>
+            <span id="current-year">{{ current_year|default:2025 }}</span>
+            <button type="button" onclick="changeYear(1)">Next →</button>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <section class="dashboard">
+            <h2>Analytics Overview</h2>
+            <div class="analytics-summary">
+                <p>Total Goals: {{ analytics.total_goals|default:0 }}</p>
+                <p>Completed Goals: {{ analytics.completed_goals|default:0 }} ({{ analytics.completion_rate|floatformat:2|default:0 }}%)</p>
+                <p>Average Days Spent: {{ analytics.avg_days_spent|floatformat:2|default:0 }}</p>
+                <p>Total Milestones: {{ analytics.total_milestones|default:0 }}</p>
+                <p>Completed Milestones: {{ analytics.completed_milestones|default:0 }} ({{ analytics.milestone_completion_rate|floatformat:2|default:0 }}%)</p>
+            </div>
+            <div class="chart-container">
+                <canvas id="goal-chart"></canvas>
+            </div>
+        </section>
+
+        <section>
+            <h2>Goal Progress</h2>
+            {% for goal in goals %}
+            <div class="goal-card">
+                <h3>{{ goal.title|default:"Untitled Goal" }}</h3>
+                <div>
+                    <label>Progress: {{ goal.completion_rate|floatformat:2|default:0 }}%</label>
+                    <progress value="{{ goal.completion_rate|default:0 }}" max="100"></progress>
+                </div>
+                <p>Status: {% if goal.completed %}Completed{% else %}In Progress{% endif %}</p>
+                <p>Days Spent: {{ goal.days_spent|default:"N/A" }}</p>
+            </div>
+            {% empty %}
+            <p>No goals found for {{ current_year|default:2025 }}. <a href="{% url 'goal_tracker' %}">Create a goal</a>.</p>
+            {% endfor %}
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script>
+        function changeYear(offset) {
+            const yearElement = document.getElementById('current-year');
+            const currentYear = parseInt(yearElement.textContent) || 2025;
+            const newYear = currentYear + offset;
+            window.location.href = '?year=' + newYear;
+        }
+
+        const completionRate = parseFloat("{{ analytics.completion_rate|default_if_none:0|floatformat:2 }}") || 0;
+        const milestoneCompletionRate = parseFloat("{{ analytics.milestone_completion_rate|default_if_none:0|floatformat:2 }}") || 0;
+
+        const ctx = document.getElementById('goal-chart');
+        if (ctx && typeof Chart !== 'undefined') {
+            new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Goals', 'Milestones'],
+                    datasets: [{
+                        label: 'Completion Rate (%)',
+                        data: [completionRate, milestoneCompletionRate],
+                        backgroundColor: ['#a9746e', '#c1a18a'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { beginAtZero: true, max: 100 }
+                    },
+                    responsive: true
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+{% endblock %}

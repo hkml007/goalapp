@@ -1,0 +1,281 @@
+{% extends 'header_footer.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<style>
+    h2 {
+        text-align: center;
+        font-size: 2.5em;
+        color: #3e2e24;
+        margin-bottom: 30px;
+    }
+
+    .calendar-nav {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 40px;
+        margin-bottom: 30px;
+    }
+
+    .calendar-nav a {
+        text-decoration: none;
+        color: #5a443a;
+        font-weight: bold;
+        font-size: 1.2em;
+    }
+
+    .month-year {
+        font-size: 1.5em;
+        font-family: 'Courier New', Courier, monospace;
+        color: #6d5240;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #fffaf4;
+        box-shadow: 0 0 10px rgba(120, 100, 90, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    th, td {
+        border: 1px solid #d9cbbf;
+        padding: 10px;
+        text-align: center;
+    }
+
+    th {
+        background-color: #e7dcd2;
+        color: #3e2e24;
+    }
+
+    .save-btn, .add-btn {
+        padding: 10px 24px;
+        background-color: #6f4e37;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-right: 12px;
+        font-size: 1em;
+    }
+
+    .save-btn:hover, .add-btn:hover {
+        background-color: #5e3e2a;
+    }
+
+    .delete-btn {
+        color: #a8442b;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2em;
+    }
+
+    .home-btn-container {
+        text-align: center;
+        margin: 30px 0;
+    }
+
+    .home-btn-container a button {
+        padding: 12px 28px;
+        background-color: #8b5c42;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1em;
+    }
+
+    .home-btn-container a button:hover {
+        background-color: #6a4532;
+    }
+
+    input[type="text"] {
+        padding: 6px 10px;
+        border: 1px solid #cbb8a9;
+        border-radius: 4px;
+        background-color: #fdf8f4;
+        color: #4b3b2f;
+    }
+
+    input[type="checkbox"] {
+        transform: scale(1.2);
+        accent-color: #6f4e37;
+    }
+
+    input[type="checkbox"]:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: #e0e0e0;
+    }
+</style>
+
+<h2>Habit Tracker</h2>
+
+<div class="calendar-nav">
+    <a href="{% url 'habit_tracker' prev_year prev_month %}">◀️ Prev</a>
+    <span class="month-year">{{ calendar_month }} {{ year }}</span>
+    <a href="{% url 'habit_tracker' next_year next_month %}">Next ▶️</a>
+</div>
+
+<form id="habit-form" method="post" action="{% url 'save_habits' %}">
+    {% csrf_token %}
+    <input type="hidden" name="year" value="{{ year }}">
+    <input type="hidden" name="month" value="{{ month }}">
+
+    <table id="habit-table">
+        <thead>
+            <tr>
+                <th>Habit</th>
+                {% for day in days_range %}
+                    <th>{{ day }}</th>
+                {% endfor %}
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="habit-body">
+            {% for habit in habits %}
+                <tr>
+                    <td>{{ habit.name }}</td>
+                    {% for day in days_range %}
+                        <td>
+                            <input type="checkbox"
+                                   name="habit_{{ habit.id }}_{{ day }}"
+                                   {% if habit_logs|get_item:habit.id|get_item:day %}checked{% endif %}
+                                   data-year="{{ year }}"
+                                   data-month="{{ month }}"
+                                   data-day="{{ day }}"
+                                   class="habit-checkbox">
+                        </td>
+                    {% endfor %}
+                    <td>
+                        <button type="button" 
+                                class="delete-btn"
+                                onclick="handleDeleteHabit('{{ habit.id }}', '{{ habit.year }}', '{{ habit.month }}')">
+                            🗑️
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <button type="button" class="add-btn" onclick="addHabitRow()">➕ Add Habit</button>
+    <button type="submit" class="save-btn">💾 Save</button>
+</form>
+
+<div class="home-btn-container">
+    <a href="{% url 'user_home' %}">
+        <button type="button">🏠 Go to Home</button>
+    </a>
+</div>
+
+<script>
+    function handleDeleteHabit(habitId, year, month) {
+        if (confirm('Delete this habit permanently?')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/delete_habit/${habitId}/`;
+
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = 'csrfmiddlewaretoken';
+            csrf.value = '{{ csrf_token }}';
+            form.appendChild(csrf);
+
+            const yearInput = document.createElement('input');
+            yearInput.type = 'hidden';
+            yearInput.name = 'year';
+            yearInput.value = year;
+            form.appendChild(yearInput);
+
+            const monthInput = document.createElement('input');
+            monthInput.type = 'hidden';
+            monthInput.name = 'month';
+            monthInput.value = month;
+            form.appendChild(monthInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    const days = parseInt("{{ days_range|length|default:0 }}");
+    const currentYear = parseInt("{{ current_year }}");
+    const currentMonth = parseInt("{{ current_month }}");
+    const currentDay = parseInt("{{ current_day }}");
+    const viewedYear = parseInt("{{ year }}");
+    const viewedMonth = parseInt("{{ month }}");
+    let newHabitId = -1;
+
+    function isFutureDate(year, month, day) {
+        if (year > currentYear) return true;
+        if (year < currentYear) return false;
+        if (month > currentMonth) return true;
+        if (month < currentMonth) return false;
+        return day > currentDay;
+    }
+
+    // Disable checkboxes for future dates
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = document.querySelectorAll('.habit-checkbox');
+        checkboxes.forEach(checkbox => {
+            const year = parseInt(checkbox.getAttribute('data-year'));
+            const month = parseInt(checkbox.getAttribute('data-month'));
+            const day = parseInt(checkbox.getAttribute('data-day'));
+            if (isFutureDate(year, month, day)) {
+                checkbox.disabled = true;
+            }
+        });
+    });
+
+    function addHabitRow() {
+        const tbody = document.getElementById("habit-body");
+        const row = document.createElement("tr");
+        const tempId = Math.abs(newHabitId);
+
+        const nameCell = document.createElement("td");
+        const input = document.createElement("input");
+        input.type = "text";
+        input.name = `habit_new_${tempId}_name`;
+        input.placeholder = "New Habit";
+        input.required = true;
+        nameCell.appendChild(input);
+        row.appendChild(nameCell);
+
+        for (let i = 1; i <= days; i++) {
+            const dayCell = document.createElement("td");
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.name = `habit_new_${tempId}_${i}`;
+            checkbox.className = "habit-checkbox";
+            checkbox.setAttribute('data-year', viewedYear);
+            checkbox.setAttribute('data-month', viewedMonth);
+            checkbox.setAttribute('data-day', i);
+            if (isFutureDate(viewedYear, viewedMonth, i)) {
+                checkbox.disabled = true;
+            }
+            dayCell.appendChild(checkbox);
+            row.appendChild(dayCell);
+        }
+
+        const deleteCell = document.createElement("td");
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "delete-btn";
+        deleteBtn.textContent = "🗑️";
+        deleteBtn.onclick = function() {
+            row.remove();
+        };
+        deleteCell.appendChild(deleteBtn);
+        row.appendChild(deleteCell);
+
+        tbody.appendChild(row);
+        newHabitId--;
+    }
+</script><br><br><br><br><br><br><br><br>
+{% endblock %}

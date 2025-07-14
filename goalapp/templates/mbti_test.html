@@ -1,0 +1,185 @@
+{% extends 'header_footer.html' %}
+{% block content %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTI Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #f5f0eb;
+            color: #4e342e;
+        }
+
+        .coffee-card {
+            background-color: #fffaf5;
+            border: 1px solid #d7ccc8;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .progress-bar {
+            height: 10px;
+            background-color: #d7ccc8;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #a1887f;
+            transition: width 0.3s ease-in-out;
+        }
+
+        .question-container {
+            display: none;
+        }
+
+        .question-container.active {
+            display: block;
+        }
+
+        .btn-coffee {
+            background-color: #8d6e63;
+            color: white;
+        }
+
+        .btn-coffee:hover {
+            background-color: #6d4c41;
+        }
+
+        .btn-coffee-alt {
+            background-color: #a1887f;
+        }
+
+        .btn-coffee-alt:hover {
+            background-color: #8d6e63;
+        }
+
+        input[type="radio"] {
+            accent-color: #6d4c41;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-10">
+        <div class="coffee-card rounded-lg p-6 max-w-2xl mx-auto">
+            <h2 class="text-3xl font-bold mb-3 text-center text-[#6d4c41]">☕ MBTI Personality Test</h2>
+            <p class="text-center text-[#5d4037] mb-4">
+                Question <span id="current-question">1</span> of {{ form.fields|length }}
+            </p>
+            <div class="progress-bar mb-6">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <form method="post" id="mbti-form">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="question-container" id="question-{{ forloop.counter0 }}">
+                        <label class="block text-md font-semibold text-[#5d4037] mb-2">{{ field.label }}</label>
+                        <div class="space-y-2 ml-2">
+                            {{ field }}
+                        </div>
+                        {% if field.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ field.errors.as_text }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                <div class="text-center space-x-4 mt-6">
+                    <button type="button" id="back-btn" class="btn-coffee-alt hidden py-2 px-6 rounded-full text-sm font-semibold transition">← Back</button>
+                    <button type="button" id="next-btn" class="btn-coffee py-2 px-6 rounded-full text-sm font-semibold transition">Next →</button>
+                    <button type="submit" id="result-btn" class="btn-coffee hidden py-2 px-6 rounded-full text-sm font-semibold transition">Get Result</button>
+                </div>
+            </form>
+
+            <!-- 🔄 Retake Test Button -->
+            <div class="text-center mt-6">
+                <button onclick="restartTest()" class="btn-coffee-alt py-2 px-6 rounded-full text-sm font-semibold transition">🔄 Retake Test</button>
+            </div>
+
+            <div class="text-center mt-5">
+                <a href="{% url 'mbti_result' %}" id="view-results-link" class="text-[#6d4c41] hover:underline hidden">View Results</a>
+                <span class="mx-2 text-[#bca39b]">|</span>
+                <a href="{% url 'user_home' %}" class="text-[#6d4c41] hover:underline">🏠 Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'mbti_current_question';
+        const totalQuestions = {{ form.fields|length }};
+        let currentQuestion = 0;
+
+        const questions = document.querySelectorAll('.question-container');
+        const backBtn = document.getElementById('back-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const resultBtn = document.getElementById('result-btn');
+        const currentQuestionDisplay = document.getElementById('current-question');
+        const progressFill = document.getElementById('progress-fill');
+        const viewResultsLink = document.getElementById('view-results-link');
+
+        const savedProgress = localStorage.getItem(STORAGE_KEY);
+        if (savedProgress !== null) {
+            currentQuestion = parseInt(savedProgress);
+            if (isNaN(currentQuestion) || currentQuestion >= totalQuestions) {
+                currentQuestion = 0;
+            }
+        }
+
+        function updateQuestionDisplay() {
+            questions.forEach((q, index) => {
+                q.classList.toggle('active', index === currentQuestion);
+            });
+            currentQuestionDisplay.textContent = currentQuestion + 1;
+            progressFill.style.width = `${((currentQuestion + 1) / totalQuestions) * 100}%`;
+
+            backBtn.classList.toggle('hidden', currentQuestion === 0);
+            nextBtn.classList.toggle('hidden', currentQuestion === totalQuestions - 1);
+            resultBtn.classList.toggle('hidden', currentQuestion !== totalQuestions - 1);
+            viewResultsLink.classList.toggle('hidden', currentQuestion !== totalQuestions - 1);
+
+            localStorage.setItem(STORAGE_KEY, currentQuestion);
+        }
+
+        nextBtn.addEventListener('click', () => {
+            const currentInput = questions[currentQuestion].querySelector('input:checked');
+            if (!currentInput) {
+                alert('Please select an answer before proceeding.');
+                return;
+            }
+            if (currentQuestion < totalQuestions - 1) {
+                currentQuestion++;
+                updateQuestionDisplay();
+            }
+        });
+
+        backBtn.addEventListener('click', () => {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                updateQuestionDisplay();
+            }
+        });
+
+        document.getElementById('mbti-form').addEventListener('submit', (e) => {
+            const currentInput = questions[currentQuestion].querySelector('input:checked');
+            if (currentQuestion < totalQuestions - 1 || !currentInput) {
+                e.preventDefault();
+                alert('Please answer all questions before submitting.');
+                return;
+            }
+            localStorage.removeItem(STORAGE_KEY);
+        });
+
+        function restartTest() {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();  // Refreshes the page and resets progress
+        }
+
+        updateQuestionDisplay();
+    </script>
+</body>
+</html>
+{% endblock %}

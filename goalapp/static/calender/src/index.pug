@@ -1,0 +1,32 @@
+-var daysOfTheWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+-var days = [30, 31, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 1, 2, 3];
+
+.container
+  .card
+    .frame
+      .stars
+      .stars2
+      .stars3
+      .cloud.cloud_top.cloud_slow
+      .cloud.cloud_bottom.cloud_fast
+      .moon
+      .tree.tree_dark-green.tree_middle
+      .mountain.mountain_dark.mountain_top
+      .tree.tree_dark-green.tree_right     
+      .mountain.mountain_light.mountain_right
+      .tree.tree_light-green.tree_left
+      .mountain.mountain_light.mountain_left
+  .calendar
+    .header
+      h1.header_title November
+      p.header_subtitle 2022
+    .days-of-week
+      - for(i=0;i<7;i++)
+        p.day-name= daysOfTheWeek[i]
+    .days
+      - for(i=0;i<35;i++)
+        - if(i==0 || i==1 || i==32 || i==33 || i==34)
+          p.day-number.day-number_disabled= days[i]
+        - else
+          p.day-number= days[i]
+    

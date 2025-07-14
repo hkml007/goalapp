@@ -1,0 +1,38 @@
+{% extends 'header_footer.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-5 text-center fw-bold text-dark border-bottom pb-3">📊 AI-Generated Insights</h2>
+
+    {% if insights %}
+        <div class="d-flex flex-column">
+            {% for insight in insights %}
+                <div class="card shadow-lg border-start border-4 border-warning mb-5" style="border-radius: 2rem;">
+                    <div class="card-body p-5">
+                        <div class="d-flex align-items-start">
+                            <div class="me-4">
+                                <i class="bi bi-lightbulb-fill text-warning fs-1"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="card-title text-primary fw-semibold mb-3">
+                                    Generated on {{ insight.generated_on|date:"M d, Y H:i" }}
+                                </h5>
+                                <p class="mb-3"><strong class="text-secondary">Performance Score:</strong> {{ insight.performance_score }}%</p>
+                                <p class="mb-3"><strong class="text-secondary">Milestone Accuracy:</strong> {{ insight.milestone_accuracy }}%</p>
+                                <p class="mb-3"><strong class="text-secondary">Feedback Summary:</strong> {{ insight.feedback_summary }}</p>
+                                <p class="mb-3"><strong class="text-secondary">Motivational Message:</strong> <em class="text-success">{{ insight.motivational_message }}</em></p>
+                                <p class="mb-0"><strong class="text-secondary">Strategy Suggestion:</strong> {{ insight.strategy_suggestion }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center shadow-sm p-4 mt-5" style="border-radius: 1.5rem;">
+            <h5 class="fw-semibold mb-2">No recommendations available yet.</h5>
+            <p class="text-muted mb-0">Once you complete your goals or milestones, personalized insights will appear here.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

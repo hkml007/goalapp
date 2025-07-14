@@ -1,0 +1,49 @@
+{% extends 'header_footer.html' %}
+
+{% block content %}
+<div class="container d-flex flex-column align-items-center justify-content-center py-5" style="min-height: 80vh; background-color: #f3ece7; font-family: 'Quicksand', sans-serif; color: #5d4037; text-align: center;">
+    <img src="https://cdn-icons-png.flaticon.com/512/3595/3595455.png" alt="Reminder Icon" style="width: 60px; margin-bottom: 10px;">
+    
+    <div class="reminder-title mb-4" style="font-size: 36px; font-weight: bold;">Reminder</div>
+
+    {% if incomplete_milestones %}
+        <h3 style="font-size: 24px; font-weight: 600; margin-bottom: 10px;">Upcoming Milestones</h3>
+        {% for item in incomplete_milestones %}
+            <div class="reminder-box bg-{{ item.urgency }} text-white mb-3 px-4 py-3 rounded shadow-sm" style="max-width: 500px; width: 100%;">
+                <div class="reminder-text" style="font-size: 18px;">
+                    <strong>{{ item.milestone.name }}</strong> in goal <strong>{{ item.goal.title }}</strong><br>
+                    Deadline: <strong>{{ item.milestone.deadline }}</strong><br>
+                    {% if item.days_left == 0 %}
+                        ⏰ <strong>Due today!</strong>
+                    {% else %}
+                        ⏳ <strong>{{ item.days_left }} day{{ item.days_left|pluralize }} left</strong>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="reminder-box bg-light text-dark mb-3 px-4 py-3 rounded shadow-sm" style="max-width: 500px; width: 100%;">
+            <div class="reminder-text">No upcoming milestones.</div>
+        </div>
+    {% endif %}
+
+    {% if missed_milestones %}
+        <h3 style="font-size: 24px; font-weight: 600; margin: 30px 0 10px;">Missed Milestones</h3>
+        {% for item in missed_milestones %}
+            <div class="reminder-box bg-danger text-white mb-3 px-4 py-3 rounded shadow-sm" style="max-width: 500px; width: 100%;">
+                <div class="reminder-text" style="font-size: 18px;">
+                    <strong>{{ item.milestone.name }}</strong> in goal <strong>{{ item.goal.title }}</strong><br>
+                    Deadline: <strong>{{ item.milestone.deadline }}</strong><br>
+                    <strong>Missed by {{ item.days_overdue }} day{{ item.days_overdue|pluralize }}</strong>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="reminder-box bg-light text-dark mb-3 px-4 py-3 rounded shadow-sm" style="max-width: 500px; width: 100%;">
+            <div class="reminder-text">No missed milestones.</div>
+        </div>
+    {% endif %}
+
+    <a href="{% url 'user_home' %}" class="mt-4" style="background-color: #6d4c41; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600;">Back to Home</a>
+</div>
+{% endblock %}

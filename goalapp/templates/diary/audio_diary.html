@@ -1,0 +1,259 @@
+{% extends 'header_footer.html' %}
+{% block content %}
+
+<style>
+    body {
+        background-color: #f5ebe0;
+        font-family: 'Courier New', monospace;
+        color: #4e342e;
+    }
+
+    .back-button {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .back-button a button {
+        background-color: #6f4e37;
+        color: #fff3e0;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        box-shadow: 2px 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .diary-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: #fffaf3;
+        padding: 40px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border-left: 10px solid #c19a6b;
+        border-radius: 12px;
+    }
+
+    .date-navigation {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .date-navigation button {
+        background-color: #a67b5b;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 15px;
+        cursor: pointer;
+    }
+
+    .audio-interface {
+        margin: 25px 0;
+        border: 2px dashed #c7a17a;
+        padding: 20px;
+        border-radius: 10px;
+        background-color: #fff3e0;
+    }
+
+    .recording-controls {
+        display: flex;
+        gap: 10px;
+        margin: 15px 0;
+        justify-content: center;
+    }
+
+    .audio-entry {
+        margin: 25px 0;
+        padding: 20px;
+        background: #fcf0e4;
+        border-radius: 10px;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+        border-left: 6px solid #8b5e3c;
+    }
+
+    .audio-meta {
+        margin-top: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .duration-badge {
+        background: #a67b5b;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+
+    button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        background: #6f4e37;
+        color: white;
+    }
+
+    button.delete-btn {
+        background-color: #A47551;
+        transition: background 0.3s ease;
+    }
+
+    button.delete-btn:hover {
+        background-color: #8B5E3C;
+    }
+
+    button:disabled {
+        background: #d3c2b3;
+    }
+
+    label[for="file-upload"] {
+        background: #6f4e37;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        display: inline-block;
+        cursor: pointer;
+    }
+
+    input[type="file"] {
+        display: none;
+    }
+</style>
+
+<div class="back-button"><br>
+    <a href="{% url 'diary_hub' %}">
+        <button>🏠 Back to Hub</button>
+    </a>
+</div>
+
+<div class="diary-container">
+    <div class="date-navigation">
+        <button onclick="changeDate(-1)">← Previous</button>
+        <span id="current-date">{{ selected_date }}</span>
+        <button onclick="changeDate(1)">Next →</button>
+    </div>
+
+    <div class="audio-interface">
+        <div class="recording-controls">
+            <button id="start-recording">🎙 Start Recording</button>
+            <button id="stop-recording" disabled>⏹ Stop Recording</button>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" id="upload-form">
+            {% csrf_token %}
+            <div style="text-align: center; margin: 15px 0;">
+                <label for="file-upload">
+                    📤 Upload Audio
+                    <input type="file" id="file-upload" name="audio_file" accept="audio/*">
+                </label>
+                <button type="submit" style="margin-left: 10px;">💾 Save Audio</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="audio-entries">
+        {% for entry in entries %}
+        <div class="audio-entry">
+            <audio controls>
+                <source src="{{ entry.file.url }}" type="audio/webm">
+                Your browser does not support the audio element.
+            </audio>
+            <div class="audio-meta">
+                <div>
+                    <span class="duration-badge">⏱ {{ entry.duration|time:"i:s" }}</span>
+                    <span style="margin-left: 10px; color: #5d4037;">📅 {{ entry.date }} ⏰ {{ entry.time|time:"h:i A" }}</span>
+                </div>
+                <button class="delete-btn" onclick="confirmDelete('{{ entry.id }}')">🗑 Delete</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function changeDate(offset) {
+        const currentDate = new Date('{{ selected_date }}');
+        currentDate.setDate(currentDate.getDate() + offset);
+        window.location.href = `?date=${currentDate.toISOString().split('T')[0]}`;
+    }
+
+    let mediaRecorder;
+    let recordedChunks = [];
+    let recordingStartTime;
+
+    const startBtn = document.getElementById('start-recording');
+    const stopBtn = document.getElementById('stop-recording');
+    const uploadForm = document.getElementById('upload-form');
+
+    startBtn.addEventListener('click', async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            mediaRecorder = new MediaRecorder(stream);
+            recordedChunks = [];
+
+            mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
+            mediaRecorder.onstart = () => recordingStartTime = Date.now();
+            mediaRecorder.onstop = async () => {
+                const duration = Math.floor((Date.now() - recordingStartTime) / 1000);
+                const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+
+                const formData = new FormData();
+                formData.append('audio_file', blob, `recording_${Date.now()}.webm`);
+                formData.append('duration', duration);
+
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+                if (response.ok) window.location.reload();
+            };
+
+            mediaRecorder.start();
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+        } catch (err) {
+            console.error('Audio error:', err);
+        }
+    });
+
+    stopBtn.addEventListener('click', () => {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        }
+    });
+
+    uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(uploadForm);
+        const response = await fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        if (response.ok) window.location.reload();
+    });
+
+    function confirmDelete(entryId) {
+        if (confirm('Delete this audio entry permanently?')) {
+            window.location.href = `/delete_diary/${entryId}/`;
+        }
+    }
+</script><br>
+
+{% endblock %}

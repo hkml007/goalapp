@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Daily logging reminder</title>
+  <style>
+    body {
+      background: #f4f4f4;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: #fff;
+      color: #000;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .toggle {
+      float: right;
+    }
+
+    .time-picker {
+      display: flex;
+      align-items: center;
+      margin-top: 1rem;
+    }
+
+    .picker-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0 .5rem;
+    }
+
+    .picker-unit button {
+      background: transparent;
+      border: none;
+      color: #555;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .picker-unit span {
+      font-size: 1.5rem;
+      margin: .2rem 0;
+    }
+
+    .am-pm button {
+      background: #eee;
+      border: none;
+      padding: .5rem 1rem;
+      margin-left: .5rem;
+      border-radius: .25rem;
+      color: #555;
+      cursor: pointer;
+    }
+
+    .am-pm button.active {
+      background: #5c5cff;
+      color: #fff;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+      margin-left: 1rem;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0;
+      right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #5c5cff;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    button[type="submit"], .back-btn {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      background-color: #5c5cff;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-block;
+      text-decoration: none;
+      font-size: 1rem;
+    }
+
+    a {
+      color: #5c5cff;
+      text-decoration: none;
+      font-size: 1.2rem;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+
+    small {
+      display: block;
+      color: #555;
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="{% url 'user_home' %}" class="back-btn">← Back to Home</a>
+    <h1>Daily logging reminder</h1>
+
+    <form method="post">
+      {% csrf_token %}
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <strong>Daily logging reminder</strong><br>
+          <small>Remind me to record important personal information in the app every day</small>
+        </div>
+        <label class="switch">
+          <input type="checkbox" name="enabled" id="toggle" {% if form.enabled.value %}checked{% endif %}>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div id="time-picker" class="time-picker">
+        <div class="picker-unit">
+          <button type="button" class="up" data-unit="hour">▲</button>
+          <span id="hour">12</span>
+          <button type="button" class="down" data-unit="hour">▼</button>
+        </div>
+        <span>:</span>
+        <div class="picker-unit">
+          <button type="button" class="up" data-unit="minute">▲</button>
+          <span id="minute">00</span>
+          <button type="button" class="down" data-unit="minute">▼</button>
+        </div>
+        <div class="am-pm">
+          <button type="button" id="am-btn">AM</button>
+          <button type="button" id="pm-btn">PM</button>
+        </div>
+      </div>
+
+      {{ form.reminder_time }}
+      <button type="submit">Save</button>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggle = document.getElementById('toggle');
+      const picker = document.getElementById('time-picker');
+      const hourEl = document.getElementById('hour');
+      const minuteEl = document.getElementById('minute');
+      const amBtn = document.getElementById('am-btn');
+      const pmBtn = document.getElementById('pm-btn');
+      const hidden = document.getElementById('reminder_time');
+
+      function updatePickerVisibility() {
+        if (toggle) {
+          picker.style.display = toggle.checked ? 'flex' : 'none';
+        }
+      }
+      updatePickerVisibility();
+      if (toggle) toggle.addEventListener('change', updatePickerVisibility);
+
+      let [h, m] = hidden.value.split(':').map(Number);
+      let isPM = h >= 12;
+      let dispH = h % 12 || 12;
+      hourEl.textContent = dispH;
+      minuteEl.textContent = String(m).padStart(2, '0');
+      amBtn.classList.toggle('active', !isPM);
+      pmBtn.classList.toggle('active', isPM);
+
+      function commit() {
+        let hh = parseInt(hourEl.textContent, 10);
+        const mm = parseInt(minuteEl.textContent, 10);
+        if (pmBtn.classList.contains('active') && hh < 12) hh += 12;
+        if (amBtn.classList.contains('active') && hh === 12) hh = 0;
+        hidden.value = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+      }
+
+      document.querySelectorAll('.up, .down').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const unit = btn.dataset.unit;
+          let val = parseInt((unit === 'hour' ? hourEl.textContent : minuteEl.textContent), 10);
+          const max = unit === 'hour' ? 12 : 59;
+          const min = unit === 'hour' ? 1 : 0;
+          val = btn.classList.contains('up') ? val + 1 : val - 1;
+          if (val > max) val = min;
+          if (val < min) val = max;
+          if (unit === 'hour') hourEl.textContent = val;
+          else minuteEl.textContent = String(val).padStart(2, '0');
+          commit();
+        });
+      });
+
+      amBtn.addEventListener('click', () => {
+        amBtn.classList.add('active');
+        pmBtn.classList.remove('active');
+        commit();
+      });
+      pmBtn.addEventListener('click', () => {
+        pmBtn.classList.add('active');
+        amBtn.classList.remove('active');
+        commit();
+      });
+    });
+  </script>
+
+  <script>
+    const publicVapidKey = "{{ VAPID_PUBLIC_KEY|default:'' }}";
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+    }
+
+    async function registerPush() {
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') return console.warn('Push permission denied');
+
+      const reg = await navigator.serviceWorker.register('/service-worker.js');
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+      });
+
+      await fetch("{% url 'subscribe_push' %}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify(sub)
+      });
+    }
+
+    const pushEnabledStr = "{{ reminder.enabled|yesno:'true,false'|default:'false' }}";
+    const pushEnabled = (pushEnabledStr === "true");
+
+    if (pushEnabled) {
+      registerPush().catch(console.error);
+    }
+  </script>
+</body>
+</html>

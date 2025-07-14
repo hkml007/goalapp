@@ -1,0 +1,405 @@
+@import url("https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Open+Sans:wght@300;400&display=swap");
+
+/* --------------------------- Colors ------------------------- */
+// Weather Card
+$body: #fffff0;
+$card: #dff6ff;
+$frame: #0061a8;
+$shadow-light: rgba(0, 0, 0, 0.1);
+$shadow-dark: rgba(0, 0, 0, 0.4);
+$shadow-moon: rgba(245, 237, 194, 0.4);
+$moon: #f5edc2;
+$cloud: #e3e3e3;
+$mountain-light: #ffffff;
+$mountain-dark: #9aceff;
+$tree-dark-green: #228b22;
+$tree-light-green: #33ad39;
+
+// Calender Card
+$calendar: #ffffff;
+$calendar-title: #0061a8;
+$calendar-subtitle: #919191;
+$day-number: #f0fbfe;
+$day-number-disabled: #c1c1c1;
+$day-number-border: #9aceff;
+
+/* ---------------------- Width & Heights --------------------- */
+// Weather Card
+$card-width: 400px;
+$card-height: 400px;
+$moon-width: 40px;
+$moon-height: 40px;
+$tree-border-small: 20px;
+$tree-border-large: 30px;
+
+// Stars
+$starFieldWidth: 1560;
+$starFieldHeight: 1560;
+$starStartOffset: 600px;
+
+$starOneScrollDuration: 200s;
+$starTwoScrollDuration: 225s;
+$starThreeScrollDuration: 275s;
+$numStarOneStars: 2000;
+$numStarTwoStars: 700;
+$numStarThreeStars: 200;
+
+/* --------------------------- Mixins -------------------------- */
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin tree-leaves($color, $border-size) {
+  border: $border-size solid transparent;
+  border-bottom: $border-size solid $color;
+}
+
+@mixin star-template($numStars, $starSize, $scrollSpeed) {
+  z-index: 10;
+  width: $starSize;
+  height: $starSize;
+  border-radius: 100%;
+  background: transparent;
+  box-shadow: create-stars($numStars);
+  animation: moveStars $scrollSpeed linear infinite;
+  &:after {
+    content: " ";
+    top: -$starStartOffset;
+    width: $starSize;
+    height: $starSize;
+    border-radius: 100%;
+    position: absolute;
+    background: transparent;
+    box-shadow: create-stars($numStars);
+  }
+}
+
+@mixin cloud-template() {
+  position: absolute;
+  z-index: 1;
+  width: 40px;
+  height: 40px;
+  background-color: $cloud;
+  border-radius: 100%;
+  &::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: -12px;
+    width: 30px;
+    height: 25px;
+    background-color: $cloud;
+    border-radius: 100% 0 0 100%;
+  }
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    right: -12px;
+    width: 30px;
+    height: 25px;
+    background-color: $cloud;
+    border-radius: 0 100% 100% 0;
+  }
+}
+
+@mixin cloud-position($initialPosX, $initialPosY) {
+  top: $initialPosX;
+  left: $initialPosY;
+}
+
+@mixin cloud-animate($scrollSpeed, $delay) {
+  animation: moveCloud $scrollSpeed linear $delay infinite;
+}
+
+/* ------------------------ Functions ------------------------ */
+@function create-stars($n) {
+  $stars: "#{random($starFieldWidth)}px #{random($starFieldHeight)}px #FFF";
+
+  @for $i from 2 through $n {
+    $stars: "#{$stars} , #{random($starFieldWidth)}px #{random($starFieldHeight)}px #FFF";
+  }
+  @return unquote($stars);
+}
+
+/* ------------------------ Reset CSS ----------------------- */
+*,
+*::after,
+*::before {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* --------------------------- CSS -------------------------- */
+body {
+  @include flex-center;
+  min-height: 100vh;
+  background-color: $body;
+}
+
+.container {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 1px 1px 10px $shadow-light;
+}
+
+.card {
+  @include flex-center;
+  height: $card-height;
+  width: $card-width;
+  background-color: $card;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%239ddff9' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+.frame {
+  position: relative;
+  height: $card-height - 100;
+  width: $card-width - 100;
+  background: linear-gradient(to bottom, darken($frame, 40%) 0%, $frame 100%);
+  border-radius: 100%;
+  box-shadow: inset 0 0 20px $shadow-dark, 0 0 0 8px $card, 0 0 0 10px $frame;
+  overflow: hidden;
+
+  .cloud {
+    @include cloud-template();
+
+    &_top {
+      @include cloud-position(40px, -40px);
+    }
+
+    &_bottom {
+      @include cloud-position(80px, -40px);
+    }
+
+    &_slow {
+      @include cloud-animate(60s, 2s);
+    }
+
+    &_fast {
+      @include cloud-animate(30s, 0s);
+    }
+  }
+
+  .moon {
+    position: absolute;
+    top: 40px;
+    right: 80px;
+    width: $moon-width;
+    height: $moon-height;
+    border-radius: 100%;
+    background-color: $moon;
+    box-shadow: 0 0 10px 4px $shadow-moon;
+    background-image: radial-gradient(
+        circle at 40% 80%,
+        #ddc997 10%,
+        transparent 0
+      ),
+      radial-gradient(circle at 55% 70%, #ddc997 5%, transparent 0),
+      radial-gradient(circle at 58% 85%, #ddc997 6%, transparent 0),
+      radial-gradient(circle at 80% 40%, #ddc997 12%, transparent 0),
+      radial-gradient(circle at 87% 58%, #ddc997 4%, transparent 0);
+  }
+
+  .mountain {
+    position: absolute;
+    height: $card-height - 200;
+    width: $card-width - 100;
+    border-radius: 100%;
+    box-shadow: 0 0 20px $shadow-dark;
+
+    &_light {
+      background-color: $mountain-light;
+    }
+
+    &_dark {
+      background-color: $mountain-dark;
+    }
+
+    &_left {
+      bottom: -150px;
+      left: -40px;
+    }
+
+    &_right {
+      bottom: -120px;
+      right: -80px;
+    }
+
+    &_top {
+      bottom: -110px;
+      left: 0;
+    }
+  }
+
+  .tree {
+    position: absolute;
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+    }
+
+    &_dark-green {
+      @include tree-leaves($tree-dark-green, $tree-border-small);
+      &::before,
+      &::after {
+        @include tree-leaves($tree-dark-green, $tree-border-small);
+      }
+    }
+
+    &_light-green {
+      @include tree-leaves($tree-light-green, $tree-border-large);
+      &::before,
+      &::after {
+        @include tree-leaves($tree-light-green, $tree-border-large);
+      }
+    }
+
+    &_middle {
+      top: 145px;
+      left: 100px;
+      &::before {
+        top: -5px;
+        right: -20px;
+      }
+      &::after {
+        top: 10px;
+        right: -20px;
+      }
+    }
+
+    &_left {
+      top: 160px;
+      left: 30px;
+      &::before {
+        top: -10px;
+        right: -30px;
+      }
+      &::after {
+        top: 10px;
+        right: -30px;
+      }
+    }
+
+    &_right {
+      top: 155px;
+      right: 30px;
+      &::before {
+        top: -5px;
+        right: -20px;
+      }
+      &::after {
+        top: 10px;
+        right: -20px;
+      }
+    }
+  }
+}
+
+.stars {
+  @include star-template($numStarOneStars, 1px, $starOneScrollDuration);
+}
+
+.stars2 {
+  @include star-template($numStarTwoStars, 2px, $starTwoScrollDuration);
+}
+
+.stars3 {
+  @include star-template($numStarThreeStars, 3px, $starThreeScrollDuration);
+}
+
+.calendar {
+  padding: 10px;
+  position: relative;
+  height: $card-height - 60;
+  width: $card-width;
+  background-color: $calendar;
+  font-family: "Open Sans", sans-serif;
+
+  .header {
+    padding-top: 5px;
+    @include flex-center;
+    flex-direction: column;
+
+    &_title {
+      font-family: "Kaushan Script", cursive;
+      font-size: 28px;
+      letter-spacing: 2px;
+      line-height: 1;
+      color: $calendar-title;
+    }
+
+    &_subtitle {
+      font-size: 14px;
+      color: $calendar-subtitle;
+    }
+  }
+
+  .days-of-week {
+    padding: 10px;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-column-gap: 18px;
+
+    .day-name {
+      color: $calendar-title;
+    }
+  }
+
+  .days {
+    padding: 10px;
+    display: grid;
+    grid-template-columns: repeat(7, 35px);
+    grid-column-gap: 18px;
+    grid-row-gap: 5px;
+
+    .day-number {
+      @include flex-center;
+      min-height: 35px;
+      border-radius: 100%;
+      background-color: $day-number;
+      transition: all 0.4s ease-in-out;
+
+      &:hover {
+        border: 2px solid $day-number-border;
+        transform: scale(1.2);
+        background-color: transparent;
+      }
+
+      &_disabled {
+        pointer-events: none;
+        color: $day-number-disabled;
+        background: repeating-linear-gradient(
+          45deg,
+          $day-number,
+          $day-number 5px,
+          #ffffff 5px,
+          #ffffff 10px
+        );
+      }
+    }
+  }
+}
+
+/* ----------------------- Animations ----------------------- */
+@keyframes moveStars {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(-#{$starFieldHeight}px)
+      translateX(-#{$starFieldWidth}px);
+  }
+}
+
+@keyframes moveCloud {
+  from {
+    transform: translateX(-100px);
+  }
+  to {
+    transform: translateX(350px);
+  }
+}

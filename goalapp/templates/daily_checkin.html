@@ -1,0 +1,570 @@
+{% extends 'header_footer.html' %}
+{% block title %}Daily Check-in{% endblock %}
+{% block content %}
+<div class="wrapper-buttons">
+    <a href="{% url 'user_home' %}" class="btn btn-outline-secondary">← Back to Home</a>
+</div>
+
+<div class="wrapper">
+    <div class="checkin-container">
+        {% csrf_token %}
+        <h2>☕ Daily Check-in</h2>
+
+        <div class="alert-container" id="alert-container"></div>
+
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div class="streak-container">
+            Current Streak: <span>{{ daily_checkin.streak|default:0 }} day{{ daily_checkin.streak|default:0|pluralize }}</span><br>
+            Longest Streak: <span>{{ daily_checkin.longest_streak|default:0 }} day{{ daily_checkin.longest_streak|default:0|pluralize }}</span>
+        </div>
+
+        <div class="calendar-container">
+            {% for day in checkin_history %}
+                <div class="calendar-day {% if day.checked_in %}checked-in{% endif %} {% if day.date == daily_checkin.last_checkin and not can_checkin %}today{% endif %}">
+                    {{ day.date|date:"d" }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <table>
+            <tr>
+                <th>Last Check-in Date</th>
+            </tr>
+            <tr>
+                <td id="last-checkin">{{ daily_checkin.last_checkin|date:"F j, Y"|default:"Never" }}</td>
+            </tr>
+        </table>
+
+        <button id="checkin-btn" {% if not can_checkin %}disabled{% endif %}>
+            {% if can_checkin %}Check In Today{% else %}Already Checked In{% endif %}
+        </button>
+
+        {% if not can_checkin %}
+            <div id="countdown"></div>
+        {% endif %}
+
+        <div class="game-container" id="game-container">
+            <p>Check in for 7 consecutive days to unlock a fun game!</p>
+        </div>
+    </div>
+</div>
+
+<!-- Serialize template variables into JSON -->
+{{ daily_checkin.streak|default:0|json_script:"streak-data" }}
+{{ can_checkin|yesno:"true,false"|json_script:"can-checkin-data" }}
+{{ seconds_until_midnight|default:0|json_script:"seconds-until-midnight-data" }}
+{{ daily_checkin.longest_streak|default:0|json_script:"longest-streak-data" }}
+
+<style>
+   .wrapper {
+    width: 100%;
+    max-width: 1200px;
+    padding: 0 16px; /* Add horizontal padding */
+    margin: 0 auto;  /* Center the container horizontally */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    min-height: 100vh; /* Optional: center vertically on full height */
+}
+
+
+    .wrapper-buttons {
+        width: 100%;
+        max-width: 1200px;
+        padding: 0 35px;
+        margin-top: 20px;
+        text-align: left;
+    }
+
+    .checkin-container {
+        background-color: #fff3e0;
+        padding: 30px;
+        max-width: 600px;
+        width: 100%;
+        border-radius: 15px;
+        box-shadow: 0 6px 16px rgba(100, 70, 60, 0.1);
+        text-align: center;
+        margin: 20px 0;
+    }
+
+    h2, h3 {
+        color: #6d4c41;
+        margin-bottom: 20px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+    }
+
+    th, td {
+        padding: 12px;
+        border: 1px solid #d7ccc8;
+    }
+
+    th {
+        background-color: #a1887f;
+        color: white;
+    }
+
+    td {
+        background-color: #fbe9e7;
+    }
+
+    button {
+        background-color: #8d6e63;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        margin: 5px;
+    }
+
+    button:hover {
+        background-color: #6d4c41;
+    }
+
+    button:disabled {
+        background-color: #bcaaa4;
+        cursor: not-allowed;
+    }
+
+    button:active {
+        transform: scale(0.95);
+    }
+
+    ul {
+        list-style-type: none;
+        padding: 0;
+        color: #bf360c;
+        font-weight: bold;
+        margin: 15px 0;
+    }
+
+    li {
+        margin-bottom: 10px;
+    }
+
+    .streak-container, .game-container {
+        margin: 15px 0;
+        padding: 15px;
+        background-color: #fff8e1;
+        border-radius: 8px;
+    }
+
+    .streak-container span {
+        font-size: 1.2em;
+        color: #d81b60;
+    }
+
+    .calendar-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin: 20px 0;
+    }
+
+    .calendar-day {
+        width: 50px;
+        height: 50px;
+        line-height: 50px;
+        border-radius: 50%;
+        background-color: #e0e0e0;
+        color: #757575;
+        font-size: 0.9em;
+        flex-shrink: 0;
+    }
+
+    .calendar-day.checked-in {
+        background-color: #ffcc80;
+        color: #4e342e;
+        font-weight: bold;
+    }
+
+    .calendar-day.today {
+        border: 2px solid #d81b60;
+    }
+
+    #countdown {
+        margin-top: 15px;
+        font-size: 1em;
+        color: #6d4c41;
+        font-weight: 500;
+    }
+
+    .game-container button {
+        margin: 5px;
+    }
+
+    .game-feedback {
+        margin-top: 15px;
+        font-size: 1em;
+        color: #6d4c41;
+        font-weight: 500;
+    }
+
+    .color-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin: 15px 0;
+    }
+
+    .color-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 2px solid #4e342e;
+        cursor: pointer;
+        transition: opacity 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    .color-btn.active {
+        opacity: 0.5;
+    }
+
+    .alert-container {
+        position: fixed;
+        top: 70px;
+        right: 20px;
+        z-index: 1050;
+        width: 90%;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 576px) {
+        .checkin-container {
+            padding: 20px;
+            margin: 10px 0;
+        }
+
+        .calendar-day, .color-btn {
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            font-size: 0.8em;
+        }
+
+        .alert-container {
+            top: 60px;
+            right: 10px;
+            width: 80%;
+            max-width: 300px;
+        }
+
+        button {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        h2 {
+            font-size: 1.5em;
+        }
+
+        h3 {
+            font-size: 1.25em;
+        }
+    }
+</style>
+
+<script>
+    // Retrieve serialized data
+    const streak = JSON.parse(document.getElementById('streak-data').textContent);
+    const canCheckin = JSON.parse(document.getElementById('can-checkin-data').textContent);
+    const secondsUntilMidnight = JSON.parse(document.getElementById('seconds-until-midnight-data').textContent);
+    const longestStreak = JSON.parse(document.getElementById('longest-streak-data').textContent);
+
+    // Log initial state for debugging
+    console.log('Template variables:', {
+        streak: streak,
+        can_checkin: canCheckin,
+        seconds_until_midnight: secondsUntilMidnight,
+        longest_streak: longestStreak
+    });
+
+    // Game level configurations
+    const gameLevels = [
+        { level: 1, sequenceLength: 3, displayTime: 1000, pauseTime: 500, description: "Watch the sequence of 3 colors and repeat it!" },
+        { level: 2, sequenceLength: 4, displayTime: 900, pauseTime: 450, description: "Watch the sequence of 4 colors (faster pace) and repeat it!" },
+        { level: 3, sequenceLength: 5, displayTime: 800, pauseTime: 400, description: "Watch the sequence of 5 colors (faster pace) and repeat it!" },
+        { level: 4, sequenceLength: 6, displayTime: 700, pauseTime: 350, description: "Watch the sequence of 6 colors (expert pace) and repeat it!" },
+        { level: 5, sequenceLength: 7, displayTime: 600, pauseTime: 300, description: "Watch the sequence of 7 colors (expert pace) and repeat it!" },
+        { level: 6, sequenceLength: 8, displayTime: 500, pauseTime: 250, description: "Watch the sequence of 8 colors (master pace) and repeat it!" },
+        { level: 7, sequenceLength: 9, displayTime: 400, pauseTime: 200, description: "Watch the sequence of 9 colors (master pace) and repeat it!" },
+        { level: 8, sequenceLength: 10, displayTime: 300, pauseTime: 150, description: "Watch the sequence of 10 colors (extreme pace) and repeat it!" },
+        { level: 9, sequenceLength: 11, displayTime: 250, pauseTime: 125, description: "Watch the sequence of 11 colors (extreme pace) and repeat it!" },
+        { level: 10, sequenceLength: 12, displayTime: 200, pauseTime: 100, description: "Watch the sequence of 12 colors (legendary pace) and repeat it!" },
+        { level: 11, sequenceLength: 12, displayTime: 200, pauseTime: 100, description: "Watch the sequence of 12 colors (legendary pace) and repeat it!" }
+    ];
+
+    // Get CSRF token
+    const getCsrfToken = () => {
+        const tokenElement = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        return tokenElement ? tokenElement.value : '';
+    };
+
+    // Show Alert
+    function showAlert(message, type = 'success') {
+        const alertContainer = document.getElementById('alert-container');
+        if (!alertContainer) {
+            console.error('Alert container not found');
+            return;
+        }
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        alertContainer.appendChild(alertDiv);
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    }
+
+    // Initialize game
+    function initializeGame(completedStreaks) {
+        const gameContainer = document.getElementById('game-container');
+        if (!gameContainer) return;
+
+        if (streak < 7 || streak % 7 !== 0) {
+            gameContainer.innerHTML = `<p>Check in for 7 consecutive days to unlock a fun game!</p>`;
+            return;
+        }
+
+        const levelIndex = Math.min(completedStreaks - 1, gameLevels.length - 1);
+        const { level, sequenceLength, displayTime, pauseTime, description } = gameLevels[levelIndex];
+
+        gameContainer.innerHTML = `
+            <h3>🎉 Color Sequence Memory Game - Level ${level}</h3>
+            <p>${description}</p>
+            <div class="color-buttons">
+                <div class="color-btn" style="background-color: red;" data-color="red"></div>
+                <div class="color-btn" style="background-color: blue;" data-color="blue"></div>
+                <div class="color-btn" style="background-color: green;" data-color="green"></div>
+                <div class="color-btn" style="background-color: yellow;" data-color="yellow"></div>
+            </div>
+            <button id="start-sequence-btn">Start Sequence</button>
+            <button id="reset-game-btn">New Game</button>
+            <div class="game-feedback" id="game-feedback"></div>
+        `;
+        initializeColorSequenceGame(sequenceLength, displayTime, pauseTime);
+    }
+
+    // Handle Check-In
+    const checkinBtn = document.getElementById('checkin-btn');
+    if (checkinBtn) {
+        checkinBtn.addEventListener('click', () => {
+            console.log('Check-in button clicked');
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', getCsrfToken());
+
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`HTTP error! Status: ${response.status}, Body: ${text}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Fetch response:', data);
+                if (data.success) {
+                    const lastCheckin = document.getElementById('last-checkin');
+                    if (lastCheckin) lastCheckin.textContent = data.last_checkin;
+                    checkinBtn.textContent = 'Already Checked In';
+                    checkinBtn.disabled = true;
+
+                    const streakContainer = document.querySelector('.streak-container');
+                    if (streakContainer) {
+                        streakContainer.innerHTML = `
+                            Current Streak: <span>${data.streak} day${data.streak === 1 ? '' : 's'}</span><br>
+                            Longest Streak: <span>${longestStreak} day${longestStreak === 1 ? '' : 's'}</span>
+                        `;
+                    }
+
+                    const todayDiv = document.querySelector('.calendar-day:last-child');
+                    if (todayDiv) todayDiv.classList.add('checked-in', 'today');
+
+                    const completedStreaks = Math.floor(data.streak / 7);
+                    initializeGame(completedStreaks);
+
+                    startCountdown(24 * 60 * 60);
+                    showAlert('Check-in successful!', 'success');
+                } else {
+                    showAlert(data.error || 'Failed to check in.', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error details:', error.message);
+                showAlert(`An error occurred while checking in: ${error.message}`, 'danger');
+            });
+        });
+    } else {
+        console.error('Check-in button not found');
+    }
+
+    // Countdown Timer
+    function startCountdown(seconds) {
+        console.log('Starting countdown with seconds:', seconds);
+        if (typeof seconds !== 'number' || isNaN(seconds) || seconds <= 0) {
+            console.error('Invalid seconds value for countdown:', seconds);
+            return;
+        }
+
+        const countdownDiv = document.getElementById('countdown');
+        if (!countdownDiv) {
+            console.error('Countdown div not found');
+            return;
+        }
+
+        let remaining = seconds;
+        const interval = setInterval(() => {
+            remaining--;
+            const hours = Math.floor(remaining / 3600);
+            const minutes = Math.floor((remaining % 3600) / 60);
+            const secs = remaining % 60;
+            countdownDiv.textContent = `Next check-in in ${hours}h ${minutes}m ${secs}s`;
+
+            if (remaining <= 0) {
+                clearInterval(interval);
+                countdownDiv.textContent = '';
+                const checkinBtn = document.getElementById('checkin-btn');
+                const lastCalendarDay = document.querySelector('.calendar-day:last-child');
+                if (checkinBtn) {
+                    checkinBtn.textContent = 'Check In Today';
+                    checkinBtn.disabled = false;
+                }
+                if (lastCalendarDay) {
+                    lastCalendarDay.classList.remove('today');
+                }
+            }
+        }, 1000);
+    }
+
+    // Initialize countdown if already checked in
+    if (!canCheckin) {
+        startCountdown(secondsUntilMidnight);
+    }
+
+    // Color Sequence Memory Game
+    function initializeColorSequenceGame(sequenceLength, displayTime, pauseTime) {
+        console.log('Initializing game with:', { sequenceLength, displayTime, pauseTime });
+        const colors = ['red', 'blue', 'green', 'yellow'];
+        let sequence = [];
+        let playerSequence = [];
+        let isPlayingSequence = false;
+
+        const startBtn = document.getElementById('start-sequence-btn');
+        const resetBtn = document.getElementById('reset-game-btn');
+        const feedbackDiv = document.getElementById('game-feedback');
+        const colorButtons = document.querySelectorAll('.color-btn');
+
+        if (!startBtn || !resetBtn || !feedbackDiv || colorButtons.length === 0) {
+            console.error('Required game elements not found:', {
+                startBtn: !!startBtn,
+                resetBtn: !!resetBtn,
+                feedbackDiv: !!feedbackDiv,
+                colorButtons: colorButtons.length
+            });
+            return;
+        }
+
+        function generateSequence() {
+            sequence = [];
+            for (let i = 0; i < sequenceLength; i++) {
+                sequence.push(colors[Math.floor(Math.random() * colors.length)]);
+            }
+        }
+
+        function playSequence() {
+            isPlayingSequence = true;
+            startBtn.disabled = true;
+            feedbackDiv.textContent = 'Watch the sequence...';
+            let i = 0;
+
+            const interval = setInterval(() => {
+                if (i < sequence.length) {
+                    const color = sequence[i];
+                    const button = document.querySelector(`.color-btn[data-color="${color}"]`);
+                    if (button) {
+                        button.classList.add('active');
+                        setTimeout(() => {
+                            button.classList.remove('active');
+                        }, displayTime);
+                    }
+                    i++;
+                } else {
+                    clearInterval(interval);
+                    isPlayingSequence = false;
+                    startBtn.disabled = false;
+                    feedbackDiv.textContent = 'Repeat the sequence!';
+                }
+            }, displayTime + pauseTime);
+        }
+
+        colorButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                if (isPlayingSequence) return;
+
+                const color = button.getAttribute('data-color');
+                playerSequence.push(color);
+
+                if (playerSequence.length === sequence.length) {
+                    if (playerSequence.join() === sequence.join()) {
+                        feedbackDiv.textContent = 'Correct! Well done!';
+                        startBtn.textContent = 'Play Again';
+                    } else {
+                        feedbackDiv.textContent = 'Incorrect! Try again.';
+                        startBtn.textContent = 'Try Again';
+                    }
+                    playerSequence = [];
+                }
+            });
+        });
+
+        startBtn.addEventListener('click', () => {
+            playerSequence = [];
+            generateSequence();
+            playSequence();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            playerSequence = [];
+            sequence = [];
+            feedbackDiv.textContent = '';
+            startBtn.textContent = 'Start Sequence';
+            startBtn.disabled = false;
+        });
+    }
+
+    // Initialize game on page load
+    const completedStreaks = Math.floor(streak / 7);
+    initializeGame(completedStreaks);
+</script>
+{% endblock %}

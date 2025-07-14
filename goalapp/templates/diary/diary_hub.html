@@ -1,0 +1,160 @@
+{% extends 'header_footer.html' %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Diary Hub</title>
+  <style>
+    body {
+      font-family: 'Georgia', serif;
+      background-color: #f4efe6;
+      color: #3e2c1c;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1, h2 {
+      color: #5c4438;
+    }
+
+    .back-button {
+      margin: 20px;
+      text-align: center;
+    }
+
+    .back-button a {
+      padding: 10px 20px;
+      background-color: #6f4e37;
+      color: #fff8f0;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 16px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+    }
+
+    .back-button a:hover {
+      background-color: #5c3d2e;
+    }
+
+    .diary-links {
+      display: flex;
+      gap: 20px;
+      margin-top: 50px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .diary-card {
+      padding: 20px;
+      border: 2px solid #d2bba3;
+      border-radius: 12px;
+      background-color: #fffdf7;
+      text-align: center;
+      width: 220px;
+      text-decoration: none;
+      color: #3e2c1c;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .diary-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    }
+
+    .search-container {
+      margin: 40px auto;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      max-width: 800px;
+    }
+
+    .search-container input[type="date"],
+    .search-container select {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #bfa98a;
+      border-radius: 6px;
+      background-color: #fdfaf6;
+      color: #3e2c1c;
+      font-family: 'Georgia', serif;
+    }
+
+    .search-container button {
+      padding: 10px 20px;
+      background-color: #7a5e48;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      font-family: 'Georgia', serif;
+      transition: background-color 0.3s ease;
+    }
+
+    .search-container button:hover {
+      background-color: #5f4432;
+    }
+  </style>
+</head>
+<body>
+  <div class="back-button">
+    <a href="{% url 'user_home' %}">⬅️ Back to Home</a>
+  </div>
+  
+  <h1 style="text-align: center">My Diary Hub</h1>
+  
+  <div class="search-container">
+    <form method="GET" action="{% url 'text_diary' %}" id="search-form">
+      <select name="diary_type" id="diary-type" required>
+        <option value="text_diary">Text Diary</option>
+        <option value="audio_diary">Audio Diary</option>
+        <option value="video_diary">Video Diary</option>
+      </select>
+      <input type="date" name="date" required />
+      <button type="submit">🔍 Search Diary</button>
+    </form>
+  </div>
+  
+  <div class="diary-links">
+    <a href="{% url 'text_diary' %}" class="diary-card">
+      <h2>📝 Text Diary</h2>
+      <p>Write your thoughts</p>
+    </a>
+    
+    <a href="{% url 'audio_diary' %}" class="diary-card">
+      <h2>🎤 Audio Diary</h2>
+      <p>Record your voice</p>
+    </a>
+    
+    <a href="{% url 'video_diary' %}" class="diary-card">
+      <h2>🎥 Video Diary</h2>
+      <p>Capture moments</p>
+    </a>
+  </div>
+
+  <script>
+    const diaryTypeSelect = document.getElementById('diary-type');
+    const searchForm = document.getElementById('search-form');
+
+    diaryTypeSelect.addEventListener('change', function () {
+      const diaryType = this.value;
+      let actionUrl;
+      if (diaryType === 'text_diary') {
+        actionUrl = '{% url "text_diary" %}';
+      } else if (diaryType === 'audio_diary') {
+        actionUrl = '{% url "audio_diary" %}';
+      } else if (diaryType === 'video_diary') {
+        actionUrl = '{% url "video_diary" %}';
+      }
+      searchForm.action = actionUrl;
+    });
+  </script><br><br><br><br><br><br>
+</body>
+</html>
+{% endblock %}

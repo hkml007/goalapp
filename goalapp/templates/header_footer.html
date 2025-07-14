@@ -1,0 +1,200 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Coffee Aesthetic Template</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,900" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="{% static 'user/css/bootstrap.css' %}">
+  <link rel="stylesheet" href="{% static 'user/css/animate.css' %}">
+  <link rel="stylesheet" href="{% static 'user/css/owl.carousel.min.css' %}">
+  <link rel="stylesheet" href="{% static 'user/fonts/ionicons/css/ionicons.min.css' %}">
+  <link rel="stylesheet" href="{% static 'user/fonts/fontawesome/css/font-awesome.min.css' %}">
+  <link rel="stylesheet" href="{% static 'user/fonts/flaticon/font/flaticon.css' %}">
+
+  <style>
+    body {
+      background-color: #FDF6EC;
+    }
+
+    .navbar {
+      background-color: #4B2E2B !important;
+    }
+
+    .navbar-nav .nav-link,
+    .navbar .dropdown-item {
+      color: #FAF3E0 !important;
+    }
+
+    .navbar .dropdown-menu {
+      background-color: #4B2E2B;
+    }
+
+    .navbar .dropdown-item:hover {
+      background-color: #2E1A17;
+      color: #C19A6B !important;
+    }
+
+    .btn-primary {
+      background-color: #C19A6B;
+      border-color: #C19A6B;
+      color: #2E1A17;
+    }
+
+    .btn-primary:hover {
+      background-color: #A47551;
+      border-color: #A47551;
+    }
+
+    .site-footer {
+      background-color: #4B2E2B;
+      color: #f5f5dc;
+      margin-top: auto;
+      padding-top: 2rem;
+      padding-bottom: 2rem;
+    }
+
+    .site-footer a {
+      color: #f5f5dc;
+      text-decoration: none;
+    }
+
+    .site-footer a:hover {
+      color: #C19A6B;
+      text-decoration: underline;
+    }
+
+    .site-footer h3,
+    .site-footer h5 {
+      color: #ffe0b2;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="d-flex flex-column min-vh-100">
+
+    <!-- Header -->
+    <header role="banner">
+      <nav class="navbar navbar-expand-md navbar-dark py-3">
+        <div class="container">
+          <a class="navbar-brand text-light font-weight-bold" href="#">MyApp</a>
+
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample05">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse justify-content-between" id="navbarsExample05">
+            <ul class="navbar-nav mx-auto align-items-center">
+              <li class="nav-item px-2"><a class="nav-link active" href="{{ habit_tracker_url }}">Habit Tracker</a></li>
+              <li class="nav-item dropdown px-2">
+                <a class="nav-link dropdown-toggle" href="#" id="dropdown04" data-toggle="dropdown">Challenge</a>
+                <div class="dropdown-menu" aria-labelledby="dropdown04">
+                  <a class="dropdown-item" href="../challenges/">Challenge Board</a>
+                  <a class="dropdown-item" href="../daily-checkin/">Daily Check-in Bonus</a>
+                  <a class="dropdown-item" href="../progress-tracking/">Progress</a>
+                </div>
+              </li>
+              <li class="nav-item dropdown px-2">
+                <a class="nav-link dropdown-toggle" href="#" id="dropdown05" data-toggle="dropdown">Categories</a>
+                <div class="dropdown-menu" aria-labelledby="dropdown05">
+                  <a class="dropdown-item" href="../diary_hub/">Diary</a>
+                  <a class="dropdown-item" href="../reminder/">Reminder</a>
+                  <a class="dropdown-item" href="{% url 'todo_list' %}">To-Do List</a>
+                  <a class="dropdown-item" href="../leaderboard/">Leaderboard</a>
+                  <a class="dropdown-item" href="../todo_search/">Todo Search</a>
+                  <a class="dropdown-item" href="#">Photoshop</a>
+                </div>
+              </li>
+              <li class="nav-item px-2"><a class="nav-link" href="../goal_tracker/">Goal Tracker</a></li>
+              <li class="nav-item px-2"><a class="nav-link" href="../userprofile/">Edit Profile</a></li>
+              <li class="nav-item px-2"><a class="nav-link" href="../calendar_view/">Calendar</a></li>
+            </ul>
+            <ul class="navbar-nav d-flex align-items-center">
+              <li class="nav-item px-2"><a href="../logout" class="nav-link">Logout</a></li>
+              <li class="nav-item px-2"><a href="register.html" class="nav-link">Register</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-fill">
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer py-5">
+      <div class="container">
+        <div class="row mb-4">
+          <div class="col-md-4">
+            <!-- <h3>About</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nisi, accusantium optio unde perferendis...</p> -->
+          </div>
+          <div class="col-md-8">
+            <div class="row">
+              <div class="col-md-4">
+                <!-- <h5 class="mb-3">Explore</h5>
+                <ul class="list-unstyled">
+                  <li><a href="#">About Us</a></li>
+                  <li><a href="#">Company</a></li>
+                  <li><a href="#">Teachers</a></li>
+                  <li><a href="#">Courses</a></li>
+                  <li><a href="#">Categories</a></li>
+                </ul> -->
+              </div>
+              <div class="col-md-4">
+                <!-- <h5 class="mb-3">Services</h5>
+                <ul class="list-unstyled">
+                  <li><a href="#">Support</a></li>
+                  <li><a href="#">Community</a></li>
+                  <li><a href="#">Tutorials</a></li>
+                  <li><a href="#">Workshops</a></li>
+                  <li><a href="#">Webinars</a></li>
+                </ul> -->
+              </div>
+              <div class="col-md-4">
+                <!-- <h5 class="mb-3">Legal</h5>
+                <ul class="list-unstyled">
+                  <li><a href="#">Terms of Use</a></li>
+                  <li><a href="#">Privacy Policy</a></li>
+                  <li><a href="#">Cookies</a></li>
+                  <li><a href="#">Licensing</a></li>
+                  <li><a href="#">Security</a></li>
+                </ul> -->
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="text-center small mt-4">
+          <!-- &copy; {{ year }} Your Company. All rights reserved. -->
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Loader -->
+  <!-- <div id="loader" class="show fullscreen">
+    <svg class="circular" width="48px" height="48px">
+      <circle class="path-bg" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke="#eeeeee" />
+      <circle class="path" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke="#f4b214" />
+    </svg>
+  </div> -->
+
+  <!-- Scripts -->
+  <script src="{% static 'user/js/jquery-3.2.1.min.js' %}"></script>
+  <script src="{% static 'user/js/jquery-migrate-3.0.0.js' %}"></script>
+  <script src="{% static 'user/js/popper.min.js' %}"></script>
+  <script src="{% static 'user/js/bootstrap.min.js' %}"></script>
+  <script src="{% static 'user/js/owl.carousel.min.js' %}"></script>
+  <script src="{% static 'user/js/jquery.waypoints.min.js' %}"></script>
+  <script src="{% static 'user/js/jquery.stellar.min.js' %}"></script>
+  <script src="{% static 'user/js/main.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+{% extends 'header_footer.html' %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MBTI Result</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="https://platform-api.sharethis.com/js/sharethis.js#property=68733ed715eaf50013fb7e63&product=inline-share-buttons&source=platform" async="async"></script>
+    <style>
+        body {
+            background-color: #f5f0eb;
+            font-family: 'Quicksand', sans-serif;
+            color: #4e342e;
+        }
+
+        .coffee-card {
+            background-color: #fffaf5;
+            border: 1px solid #d7ccc8;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .highlight {
+            color: #6d4c41;
+        }
+
+        .section-box {
+            background-color: #fcf5ee;
+            border-left: 6px solid #a1887f;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-box h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-coffee {
+            background-color: #8d6e63;
+        }
+
+        .btn-coffee:hover {
+            background-color: #6d4c41;
+        }
+
+        .btn-secondary {
+            background-color: #bcaaa4;
+        }
+
+        .btn-secondary:hover {
+            background-color: #a1887f;
+        }
+
+        .type-frequency-box {
+            background-color: #fdf6f0;
+            border: 1px solid #e0cfc1;
+        }
+    </style>
+</head>
+<body>
+<div class="container mx-auto px-4 py-10">
+    
+    <div class="coffee-card rounded-lg p-6 max-w-3xl mx-auto">
+        <h2 class="text-3xl font-bold mb-4 text-center highlight">☕ Your MBTI Result</h2>
+
+        {% if latest_profile %}
+            <div class="text-center mb-6">
+                <p class="text-lg">MBTI Type:
+                    <span class="font-semibold text-[#8d6e63]">{{ latest_profile.mbti_type }}</span>
+                </p>
+                <p class="text-sm text-[#7b5e57]">Taken on: {{ latest_profile.date_taken|date:"F j, Y, g:i a" }}</p>
+            </div>
+
+            <div class="section-box">
+                <h4>🌱 Personality Insight</h4>
+                <p class="text-sm">{{ insight_text }}</p>
+            </div>
+
+            <div class="section-box">
+                <h4>🔍 Deep Dive: {{ latest_profile.mbti_type }}</h4>
+                <p class="text-sm whitespace-pre-line">{{ explanation_text }}</p>
+            </div>
+
+            <div class="section-box">
+                <h4>📈 Growth Tips</h4>
+                <ul class="list-disc pl-5 text-sm">
+                    {% for tip in tips_list %}
+                        <li>{{ tip }}</li>
+                    {% empty %}
+                        <li>No tips available for this type.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="section-box">
+                <h4>🤝 You Connect Well With</h4>
+                <p class="text-sm">{{ match_text }}</p>
+            </div>
+
+            <div class="mt-10 mb-8">
+                <h4 class="text-md font-semibold mb-2">📊 MBTI Type Distribution</h4>
+                <p class="text-sm text-[#5d4037] mb-2">
+                    This graph shows how often you’ve received each of the 16 MBTI personality types based on your test history.
+                </p>
+                {% if bar_graph %}
+                    <img src="data:image/png;base64,{{ bar_graph }}" alt="Your MBTI Type Distribution" class="w-full rounded shadow">
+                {% else %}
+                    <p class="text-red-500 text-sm">No data for graph. Take the test multiple times to see results.</p>
+                {% endif %}
+            </div>
+        {% else %}
+            <p class="text-center text-[#6d4c41]">No result found. 
+                <a href="{% url 'mbti_test' %}" class="text-[#8d6e63] underline">Take the test now</a>.
+            </p>
+        {% endif %}
+
+        {% if type_counts %}
+            <div class="mt-8">
+                <h3 class="text-xl font-semibold mb-3">📜 Previous Results</h3>
+                <ul class="divide-y divide-[#e0cfc1] text-sm">
+                    {% for profile in profiles %}
+                        <li class="py-2 flex justify-between">
+                            <span>{{ profile.mbti_type }}</span>
+                            <span class="text-[#7b5e57]">{{ profile.date_taken|date:"Y-m-d H:i" }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <div class="mt-6">
+                    <h3 class="text-xl font-semibold mb-3">📌 Type Frequency</h3>
+                    <ul class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        {% for mbti, count in type_counts.items %}
+                            <li class="type-frequency-box text-sm p-3 rounded shadow-sm flex justify-between">
+                                <span class="font-medium">{{ mbti }}</span>
+                                <span>{{ count }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% else %}
+            <p class="text-center text-[#6d4c41] mt-8">No previous results to display.</p>
+        {% endif %}
+
+        <div class="text-center mt-10 space-x-4">
+            <!-- FIXED: Added onclick to clear localStorage key -->
+            <a href="{% url 'mbti_test' %}" onclick="localStorage.removeItem('mbti_current_question')" class="inline-block btn-coffee text-white font-semibold py-2 px-6 rounded-full transition">🔄 Retake Test</a>
+            <a href="{% url 'user_home' %}" class="inline-block btn-secondary text-white font-semibold py-2 px-6 rounded-full transition">🏠 Home</a>
+            <a href="#" onclick="window.print()" class="inline-block btn-secondary text-white font-semibold py-2 px-6 rounded-full transition">📄 Download as PDF</a>
+
+        </div>
+    </div>
+</div>
+<div class="sharethis-inline-share-buttons"></div><br>
+</body>
+</html>
+{% endblock %}

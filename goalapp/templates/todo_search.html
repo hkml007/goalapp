@@ -1,0 +1,114 @@
+{% extends 'header_footer.html' %}
+{% block content %}
+    <style>
+        body {
+            background-color: #f5f0eb;
+            font-family: 'Quicksand', sans-serif;
+            color: #4e342e;
+        }
+
+        h2 {
+            margin-top: 40px;
+            margin-bottom: 30px;
+            color: #6d4c41;
+        }
+
+        .search-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .search-bar {
+            max-width: 350px;
+        }
+
+        .form-control {
+            background-color: #fff8f1;
+            border: 1px solid #d7ccc8;
+            color: #4e342e;
+        }
+
+        .form-control:focus {
+            border-color: #a1887f;
+            box-shadow: 0 0 5px rgba(161, 136, 127, 0.5);
+        }
+
+        .btn-primary {
+            background-color: #a1887f;
+            border-color: #8d6e63;
+        }
+
+        .btn-primary:hover {
+            background-color: #8d6e63;
+            border-color: #6d4c41;
+        }
+
+        .task-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .task-row input[type="text"] {
+            width: 300px;
+            padding: 5px;
+            border: 1px solid #d7ccc8;
+            background-color: #fffaf5;
+            color: #4e342e;
+        }
+
+        .task-row input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+
+        .text-danger {
+            color: #a9746e !important;
+        }
+
+        .btn-secondary {
+            background-color: #bcaaa4;
+            border: none;
+        }
+
+        .btn-secondary:hover {
+            background-color: #a1887f;
+        }
+    </style>
+
+    <div class="container mt-5 text-center">
+        <h2>🔍 Search Tasks by Date</h2>
+
+        <!-- Search Form Centered -->
+        <div class="search-container">
+            <form method="GET" action="{% url 'todo_search' %}" class="search-bar">
+                <div class="input-group">
+                    <input type="date" name="date" class="form-control" value="{{ search_date }}" required>
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+            </form>
+        </div>
+
+        {% if search_date %}
+            <h4 class="mb-3">Tasks for {{ search_date }}</h4>
+
+            {% if tasks %}
+                <div class="mb-4">
+                    {% for todo in tasks %}
+                        <div class="task-row">
+                            <input type="checkbox" {% if todo.completed %}checked{% endif %} disabled>
+                            <input type="text" value="{{ todo.task }}" readonly>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-danger">No tasks found for {{ search_date }}.</p>
+            {% endif %}
+        {% endif %}
+
+        <a href="{% url 'user_home' %}" class="btn btn-secondary mt-4">← Back to Home</a>
+    </div><br><br><br><br><br><br>
+{% endblock %}
