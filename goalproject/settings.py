@@ -58,6 +58,7 @@ MIDDLEWARE = [
     'social_django.middleware.SocialAuthExceptionMiddleware',
     'goalapp.login_required_middleware.LoginRequiredMiddleware',
     'goalapp.cache_middleware.NoCacheMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware'
 ]
 
 ROOT_URLCONF = 'goalproject.urls'
@@ -239,4 +240,3 @@ import os
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
