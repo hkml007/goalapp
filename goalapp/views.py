@@ -51,7 +51,7 @@ def calendar_view(request):
     return render(request, 'calendar_view.html')  # Include JS calendar here
 
 def admin(request):
-    return render(request,'admin.html')
+    return redirect('logins')
 
 from django.contrib import messages
 from .models import Login
