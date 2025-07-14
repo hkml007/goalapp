@@ -105,17 +105,27 @@
   <body>
 
 <header role="banner">
-  <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container">
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample05">
+      <!-- Navbar toggler for mobile -->
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample05"
+        aria-controls="navbarsExample05" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
 
+      <!-- Navbar content -->
       <div class="collapse navbar-collapse" id="navbarsExample05">
-        <ul class="navbar-nav mx-auto">
-          <li class="nav-item"><a class="nav-link active" href="{{ habit_tracker_url }}">Habit Tracker</a></li>
+        <!-- Left Nav Links -->
+        <ul class="navbar-nav mx-auto text-center">
+          <li class="nav-item">
+            <a class="nav-link" href="{{ habit_tracker_url }}">Habit Tracker</a>
+          </li>
+
+          <!-- Challenge Dropdown -->
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="dropdown04" data-bs-toggle="dropdown">Challenge</a>
+            <a class="nav-link dropdown-toggle" href="#" id="dropdown04" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Challenge
+            </a>
             <div class="dropdown-menu" aria-labelledby="dropdown04">
               <a class="dropdown-item" href="../challenges/">Challenge Board</a>
               <a class="dropdown-item" href="../daily-checkin/">Daily Check-in Bonus</a>
@@ -125,8 +135,12 @@
               <a class="dropdown-item" href="../mbti_result/">MBTI Result</a>
             </div>
           </li>
+
+          <!-- Categories Dropdown -->
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="dropdown05" data-bs-toggle="dropdown">Categories</a>
+            <a class="nav-link dropdown-toggle" href="#" id="dropdown05" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Categories
+            </a>
             <div class="dropdown-menu" aria-labelledby="dropdown05">
               <a class="dropdown-item" href="../diary_hub/">Diary</a>
               <a class="dropdown-item" href="../reminder/">Reminder</a>
@@ -136,13 +150,22 @@
               <a class="dropdown-item" href="../notifications/">Notification</a>
             </div>
           </li>
-          <li class="nav-item"><a class="nav-link" href="../goal_tracker/">Goal Tracker</a></li>
-          <li class="nav-item"><a class="nav-link" href="../userprofile/">Edit Profile</a></li>
-          <li class="nav-item"><a class="nav-link" href="../calendar_view/">Calendar</a></li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="../goal_tracker/">Goal Tracker</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../userprofile/">Edit Profile</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../calendar_view/">Calendar</a>
+          </li>
         </ul>
-        <ul class="navbar-nav">
+
+        <!-- Right Nav: Notifications & Logout -->
+        <ul class="navbar-nav ml-lg-0 text-center">
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown" data-bs-toggle="dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               Notifications {% if notifications %}({{ notifications|length }}){% endif %}
             </a>
             <div class="dropdown-menu notification-dropdown" aria-labelledby="notificationDropdown">
@@ -151,8 +174,9 @@
               {% endfor %}
             </div>
           </li>
-          <li class="nav-item"><a href="../logout" class="nav-link">Logout</a></li>
-          <!-- <li class="nav-item"><a href="register.html" class="nav-link">Register</a></li> -->
+          <li class="nav-item">
+            <a class="nav-link" href="../logout">Logout</a>
+          </li>
         </ul>
       </div>
     </div>
