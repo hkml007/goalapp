@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-mya8bk)#fy!=j=l5h2_5qz#22*o8o3@g*pr*na%f6q^a5zh)j^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['goal.onrender.com']
 
 
 # Application definition
@@ -234,3 +234,9 @@ SOCIAL_AUTH_FACEBOOK_SECRET = 'your-facebook-app-secret'
 
 SOCIAL_AUTH_TWITTER_KEY = 'your-twitter-api-key'
 SOCIAL_AUTH_TWITTER_SECRET = 'your-twitter-api-secret-key'
+
+import os
+
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
